@@ -12,7 +12,8 @@ pipeline {
             steps {
                 script {
                     // Ensure the GitHub credentials with ID 'git' are used to checkout the repository
-                    git url: 'https://github.com/Chem2527/jen-Terra-ansi-ecr-eks-prom-graf.git', credentialsId: 'git'
+                    // Explicitly specify the branch name as 'main' or any branch you are using
+                    git url: 'https://github.com/Chem2527/jen-Terra-ansi-ecr-eks-prom-graf.git', branch: 'main', credentialsId: 'git'
                 }
             }
         }
