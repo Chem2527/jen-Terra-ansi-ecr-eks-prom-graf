@@ -94,54 +94,56 @@ Jenkinsfile inside repo should define CI/CD steps
 
 ```bash
 pipeline {
-  agent any
+    agent any
 
-  environment {
-    IMAGE_TAG = "latest"  // Define the image tag for the Docker image
-  }
-
-  stages {
-    // Stage 1: Clone the source code from GitHub repository
-    stage('Clone Code') {
-      steps {
-        // Git clone step to pull the code from the repository
-        git 'https://github.com/your-username/demo-app.git'
-      }
-    }
-
-    // Stage 2: Build the Docker image
-    stage('Build Docker Image') {
-      steps {
-        // Build the Docker image with the tag "flask-demo-app"
-        sh 'docker build -t flask-demo-app .'
-      }
-    }
-
-    // Stage 3: Push the built Docker image to AWS ECR
-    stage('Push to ECR') {
-      steps {
-        // Securely retrieve credentials from Jenkins
-        withCredentials([
-          string(credentialsId: 'AWS_ACCOUNT_ID', variable: 'AWS_ACCOUNT_ID'),
-          string(credentialsId: 'ECR_REPO_NAME', variable: 'ECR_REPO_NAME'),
-          string(credentialsId: 'AWS_REGION', variable: 'AWS_REGION')
-        ]) {
-          script {
-            // Dynamically construct the ECR repository URL using credentials
-            def ecrRepo = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPO_NAME}"
-
-            // Log in to AWS ECR and push the Docker image
-            sh """
-              aws ecr get-login-password --region ${AWS_REGION} | \
-              docker login --username AWS --password-stdin ${ecrRepo}
-              docker tag flask-demo-app:latest ${ecrRepo}:${IMAGE_TAG}
-              docker push ${ecrRepo}:${IMAGE_TAG}
-            """
-          }
+    stages {
+        stage('Checkout SCM') {
+            steps {
+                script {
+                    git url: 'https://github.com/Chem2527/jen-Terra-ansi-ecr-eks-prom-graf.git', branch: 'main', credentialsId: 'Git'
+                }
+            }
         }
-      }
+
+        stage('Build Docker Image') {
+            steps {
+                script {
+                    sh 'docker build -t flask-demo-app .'
+                }
+            }
+        }
+
+        stage('Push to ECR') {
+            steps {
+                withCredentials([
+                    string(credentialsId: 'AWS_ACCOUNT_ID', variable: 'AWS_ACCOUNT_ID'),
+                    string(credentialsId: 'ECR_REPO_NAME', variable: 'ECR_REPO_NAME'),
+                    string(credentialsId: 'AWS_REGION', variable: 'AWS_REGION')
+                ]) {
+                    script {
+                        echo "AWS_ACCOUNT_ID: ${AWS_ACCOUNT_ID}"
+                        echo "ECR_REPO_NAME: ${ECR_REPO_NAME}"
+                        echo "AWS_REGION: ${AWS_REGION}"
+
+                        echo "Logging into ECR..."
+                        sh """
+                            aws ecr get-login-password --region "${AWS_REGION}" | docker login --username AWS --password-stdin "${AWS_ACCOUNT_ID}".dkr.ecr."${AWS_REGION}".amazonaws.com
+                        """
+
+                        echo "Tagging Docker image..."
+                        sh """
+                            docker tag flask-demo-app:latest "${AWS_ACCOUNT_ID}".dkr.ecr."${AWS_REGION}".amazonaws.com/"${ECR_REPO_NAME}":latest
+                        """
+
+                        echo "Pushing Docker image to ECR..."
+                        sh """
+                            docker push "${AWS_ACCOUNT_ID}".dkr.ecr."${AWS_REGION}".amazonaws.com/"${ECR_REPO_NAME}":latest
+                        """
+                    }
+                }
+            }
+        }
     }
-  }
 }
 
 ```
@@ -180,5 +182,16 @@ Enter your AWS region (e.g., ap-south-1) as the Secret.
 
 ID: Name the credential AWS_REGION
 ```
+### 9. Add Environmental variables in jenkins GUI
 
+ Navigate to manage jenkins ---> system ---> check the nevironmental variables box and add below
+ 
+```bash
+AWS_ACCESS_KEY_ID: *******************
+AWS_SECRET_ACCESS_KEY: ***************
+```
+
+```bash
+Navigate to manage jenkins ---> Tools ---> check install automatically for git,docker.
+```
 
