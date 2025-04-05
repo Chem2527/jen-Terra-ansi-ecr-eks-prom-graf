@@ -2,9 +2,9 @@ pipeline {
     agent any
 
     environment {
-        AWS_ACCOUNT_ID = credentials('AWS_ACCOUNT_ID')  // Retrieve AWS Account ID
-        ECR_REPO_NAME = credentials('ECR_REPO_NAME')    // Retrieve ECR Repository Name
-        AWS_REGION = credentials('AWS_REGION')          // Retrieve AWS Region for ECR
+        AWS_ACCOUNT_ID = credentials('AWS_ACCOUNT_ID')
+        ECR_REPO_NAME = credentials('ECR_REPO_NAME')
+        AWS_REGION = credentials('AWS_REGION')
     }
 
     stages {
@@ -32,20 +32,24 @@ pipeline {
                     string(credentialsId: 'AWS_REGION', variable: 'AWS_REGION')
                 ]) {
                     script {
+                        echo "AWS_ACCOUNT_ID: ${AWS_ACCOUNT_ID}"
+                        echo "ECR_REPO_NAME: ${ECR_REPO_NAME}"
+                        echo "AWS_REGION: ${AWS_REGION}"
+
                         echo "Logging into ECR..."
-                        sh """
-                            aws ecr get-login-password --region ${env.AWS_REGION} | docker login --username AWS --password-stdin ${env.AWS_ACCOUNT_ID}.dkr.ecr.${env.AWS_REGION}.amazonaws.com
-                        """
+                        sh '''
+                            aws ecr get-login-password --region "${AWS_REGION}" | docker login --username AWS --password-stdin "${AWS_ACCOUNT_ID}".dkr.ecr."${AWS_REGION}".amazonaws.com
+                        '''
 
                         echo "Tagging Docker image..."
-                        sh """
-                            docker tag flask-demo-app:latest ${env.AWS_ACCOUNT_ID}.dkr.ecr.${env.AWS_REGION}.amazonaws.com/${env.ECR_REPO_NAME}:latest
-                        """
+                        sh '''
+                            docker tag flask-demo-app:latest "${AWS_ACCOUNT_ID}".dkr.ecr."${AWS_REGION}".amazonaws.com/"${ECR_REPO_NAME}":latest
+                        '''
 
                         echo "Pushing Docker image to ECR..."
-                        sh """
-                            docker push ${env.AWS_ACCOUNT_ID}.dkr.ecr.${env.AWS_REGION}.amazonaws.com/${env.ECR_REPO_NAME}:latest
-                        """
+                        sh '''
+                            docker push "${AWS_ACCOUNT_ID}".dkr.ecr."${AWS_REGION}".amazonaws.com/"${ECR_REPO_NAME}":latest
+                        '''
                     }
                 }
             }
