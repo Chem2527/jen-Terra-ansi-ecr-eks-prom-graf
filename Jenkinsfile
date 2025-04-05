@@ -11,8 +11,6 @@ pipeline {
         stage('Checkout SCM') {
             steps {
                 script {
-                    // Ensure the GitHub credentials with ID 'git' are used to checkout the repository
-                    // Explicitly specify the branch name as 'main' or any branch you are using
                     git url: 'https://github.com/Chem2527/jen-Terra-ansi-ecr-eks-prom-graf.git', branch: 'main', credentialsId: 'git'
                 }
             }
@@ -21,7 +19,6 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 script {
-                    // Build the Docker image
                     sh 'docker build -t flask-demo-app .'
                 }
             }
@@ -35,19 +32,19 @@ pipeline {
                     string(credentialsId: 'AWS_REGION', variable: 'AWS_REGION')
                 ]) {
                     script {
-                        // Log in to AWS ECR using the AWS credentials
+                        echo "Logging into ECR..."
                         sh """
-                            aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPO_NAME
+                            aws ecr get-login-password --region ${env.AWS_REGION} | docker login --username AWS --password-stdin ${env.AWS_ACCOUNT_ID}.dkr.ecr.${env.AWS_REGION}.amazonaws.com
                         """
 
-                        // Tag the Docker image for ECR
+                        echo "Tagging Docker image..."
                         sh """
-                            docker tag flask-demo-app:latest $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPO_NAME:latest
+                            docker tag flask-demo-app:latest ${env.AWS_ACCOUNT_ID}.dkr.ecr.${env.AWS_REGION}.amazonaws.com/${env.ECR_REPO_NAME}:latest
                         """
 
-                        // Push Docker image to ECR
+                        echo "Pushing Docker image to ECR..."
                         sh """
-                            docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPO_NAME:latest
+                            docker push ${env.AWS_ACCOUNT_ID}.dkr.ecr.${env.AWS_REGION}.amazonaws.com/${env.ECR_REPO_NAME}:latest
                         """
                     }
                 }
