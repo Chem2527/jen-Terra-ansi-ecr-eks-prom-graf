@@ -60,7 +60,7 @@ http://<ec2-public-ip>:8080
 ### 4. Give Jenkins Access to AWS Resources
 
 ```bash
-Option 1: Use IAM Role (recommended)
+Option 1: Use IAM Role 
 
 Attach an IAM role to EC2 instance with these permissions:
 
@@ -71,10 +71,6 @@ AmazonEKSClusterPolicy
 AmazonEKSWorkerNodePolicy
 
 AmazonEKS_CNI_Policy
-
-Option 2: Use AWS Access Keys
-
-Configure in Jenkins → Credentials → AWS Credentials Plugin
 ```
 
 ### 5. Install Jenkins Plugins
