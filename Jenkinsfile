@@ -11,7 +11,7 @@ pipeline {
         stage('Checkout SCM') {
             steps {
                 script {
-                    git url: 'https://github.com/Chem2527/jen-Terra-ansi-ecr-eks-prom-graf.git', branch: 'main', credentialsId: 'git'
+                    git url: 'https://github.com/Chem2527/jen-Terra-ansi-ecr-eks-prom-graf.git', branch: 'main', credentialsId: 'Git'
                 }
             }
         }
