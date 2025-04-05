@@ -9,8 +9,8 @@ pipeline {
     // Stage 1: Clone the source code from GitHub repository
     stage('Clone Code') {
       steps {
-        // Git clone step to pull the code from the repository
-        git 'https://github.com/Chem2527/jen-Terra-ansi-ecr-eks-prom-graf.git'
+        // Git clone step to pull the code from the repository (specifying the correct branch)
+        git branch: 'main', url: 'https://github.com/Chem2527/jen-Terra-ansi-ecr-eks-prom-graf.git'
       }
     }
 
