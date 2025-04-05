@@ -28,24 +28,29 @@ CMD ["python", "app.py"]
 
 ### 3. Set Up Jenkins Server on AWS EC2
 
-Launch EC2 instance (Ubuntu 20.04)
+Launch EC2 instance (Ubuntu 24.04)
 
 Install Jenkins, Docker, AWS CLI:
-```bash
-
-sudo apt update && sudo apt install -y docker.io
-sudo usermod -aG docker jenkins
-curl -fsSL https://pkg.jenkins.io/debian/jenkins.io.key | sudo tee \
-  /usr/share/keyrings/jenkins-keyring.asc > /dev/null
-echo deb [signed-by=/usr/share/keyrings/jenkins-keyring.asc] \
-  https://pkg.jenkins.io/debian binary/ | sudo tee \
-  /etc/apt/sources.list.d/jenkins.list > /dev/null
-sudo apt update && sudo apt install -y openjdk-17-jdk jenkins awscli
-Start Jenkins and open in browser:
-```
 
 ```bash
-sudo systemctl start jenkins
+    1  java --version
+    2  sudo apt install openjdk-17-jre-headless
+    3  java --version
+    4  sudo wget -O /usr/share/keyrings/jenkins-keyring.asc   https://pkg.jenkins.io/debian-stable/jenkins.io-2023.key
+    5  echo "deb [signed-by=/usr/share/keyrings/jenkins-keyring.asc]"   https://pkg.jenkins.io/debian-stable binary/ | sudo tee   /etc/apt/sources.list.d/jenkins.list > /dev/null
+    6  sudo apt-get update
+    7  sudo apt-get install jenkins
+    8  sudo systemctl enable jenkins
+    9  sudo systemctl start jenkins
+   10  sudo systemctl status jenkins
+   11  sudo apt  install docker.io
+   12  systemctl status docker
+   20  sudo apt update
+   21  sudo apt install unzip curl
+   22  sudo curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+   23  unzip awscliv2.zip
+   24  sudo ./aws/install
+   25  aws --version
 ```
 Access Jenkins at
 ```bash
