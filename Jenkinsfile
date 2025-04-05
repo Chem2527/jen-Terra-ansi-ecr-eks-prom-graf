@@ -10,7 +10,7 @@ pipeline {
     stage('Clone Code') {
       steps {
         // Git clone step to pull the code from the repository
-        git 'https://github.com/your-username/demo-app.git'
+        git 'https://github.com/Chem2527/jen-Terra-ansi-ecr-eks-prom-graf.git'
       }
     }
 
