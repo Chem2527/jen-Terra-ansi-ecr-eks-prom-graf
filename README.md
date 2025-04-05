@@ -76,16 +76,10 @@ AmazonEKS_CNI_Policy
 ### 5. Install Jenkins Plugins
 
 ```bash
-
 Docker Pipeline
-
 Kubernetes CLI
-
 Git
-
-Pipeline
-
-AWS CLI Plugin (optional if using system CLI)
+AWS Credentials
 ```
 ### 6. GitHub Integration
 
