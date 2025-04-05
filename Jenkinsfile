@@ -5,7 +5,6 @@ pipeline {
         AWS_ACCOUNT_ID = credentials('AWS_ACCOUNT_ID')  // Retrieve AWS Account ID
         ECR_REPO_NAME = credentials('ECR_REPO_NAME')    // Retrieve ECR Repository Name
         AWS_REGION = credentials('AWS_REGION')          // Retrieve AWS Region for ECR
-        GIT_CREDENTIALS = credentials('git')            // Retrieve GitHub credentials (ID is 'git')
     }
 
     stages {
