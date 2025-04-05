@@ -1,4 +1,4 @@
-# jen-Terra-ansi-ecr-eks-prom-graf
+# Jen-Terra-ansi-ecr-eks-prom-graf
 
 ## Sprint 1: Architecture Design, Dockerization, and Jenkins Setup
 
