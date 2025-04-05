@@ -52,6 +52,8 @@ Install Jenkins, Docker, AWS CLI:
    24  sudo ./aws/install
    25  aws --version
    26 sudo cat /var/lib/jenkins/secrets/initialAdminPassword
+   27 sudo usermod -aG docker jenkins
+   28 sudo systemctl restart jenkins
 ```
 Access Jenkins at
 ```bash
