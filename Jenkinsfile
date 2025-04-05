@@ -1,12 +1,6 @@
 pipeline {
     agent any
 
-    environment {
-        AWS_ACCOUNT_ID = credentials('AWS_ACCOUNT_ID')
-        ECR_REPO_NAME = credentials('ECR_REPO_NAME')
-        AWS_REGION = credentials('AWS_REGION')
-    }
-
     stages {
         stage('Checkout SCM') {
             steps {
@@ -37,19 +31,19 @@ pipeline {
                         echo "AWS_REGION: ${AWS_REGION}"
 
                         echo "Logging into ECR..."
-                        sh '''
+                        sh """
                             aws ecr get-login-password --region "${AWS_REGION}" | docker login --username AWS --password-stdin "${AWS_ACCOUNT_ID}".dkr.ecr."${AWS_REGION}".amazonaws.com
-                        '''
+                        """
 
                         echo "Tagging Docker image..."
-                        sh '''
+                        sh """
                             docker tag flask-demo-app:latest "${AWS_ACCOUNT_ID}".dkr.ecr."${AWS_REGION}".amazonaws.com/"${ECR_REPO_NAME}":latest
-                        '''
+                        """
 
                         echo "Pushing Docker image to ECR..."
-                        sh '''
+                        sh """
                             docker push "${AWS_ACCOUNT_ID}".dkr.ecr."${AWS_REGION}".amazonaws.com/"${ECR_REPO_NAME}":latest
-                        '''
+                        """
                     }
                 }
             }
