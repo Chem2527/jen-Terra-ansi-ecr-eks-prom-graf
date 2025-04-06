@@ -153,8 +153,9 @@ variable "eks_version" {
 
 # S3 Bucket for Terraform State Variables
 variable "s3_bucket_name" {
-  description = "The name of the S3 bucket for Terraform state"
-  type        = string
+    description = "The name of the S3 bucket for Terraform state"
+    type        = string
+    default     = "my-terraform-state-bucket"
 }
 
 # DynamoDB Table for Locking Variables
