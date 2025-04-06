@@ -194,4 +194,12 @@ AWS_SECRET_ACCESS_KEY: ***************
 ```bash
 Navigate to manage jenkins ---> Tools ---> check install automatically for git,docker.
 ```
+## sprint 2
+
+### 1. Install plugin
+
+Navigate to manage jenkins --> Manage plugins --> available and install below
+
+Terraform ###(Version 1.0.10)
+
 
