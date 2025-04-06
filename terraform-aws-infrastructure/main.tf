@@ -1,9 +1,3 @@
-# main.tf (Root Level)
-
-# Provider Configuration
-provider "aws" {
-  region = var.aws_region  # Reference the AWS region from variables.tf
-}
 
 # VPC Module
 module "vpc" {
