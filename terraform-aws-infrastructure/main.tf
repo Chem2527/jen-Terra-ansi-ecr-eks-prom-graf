@@ -59,15 +59,4 @@ module "s3" {
   aws_region = var.aws_region  # Add AWS region
 }
 
-# Configure Terraform backend to use the S3 bucket and DynamoDB table
-terraform {
-  backend "s3" {
-    bucket         = var.s3_bucket_name
-    key            = "terraform/state"
-    region         = var.aws_region
-    dynamodb_table = var.dynamodb_table_name
-    encrypt        = true
-  }
-}
 
-#
