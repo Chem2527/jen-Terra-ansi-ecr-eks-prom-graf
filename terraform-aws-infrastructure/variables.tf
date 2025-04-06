@@ -1,11 +1,3 @@
-# variables.tf (Root Level)
-
-variable "aws_region" {
-  description = "The AWS region to deploy the resources in"
-  type        = string
-  default     = "us-west-2"
-}
-
 # VPC Variables
 variable "vpc_cidr_block" {
   description = "The CIDR block for the VPC"
@@ -102,6 +94,7 @@ variable "egress_cidr_blocks" {
 variable "ami_id" {
   description = "The AMI ID to use for the EC2 instance"
   type        = string
+  default = "value_of_your_ami_id"  # Replace with a valid AMI ID
 }
 
 variable "instance_type" {
