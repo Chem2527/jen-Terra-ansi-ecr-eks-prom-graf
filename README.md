@@ -328,6 +328,90 @@ sudo apt install software-properties-common
 sudo add-apt-repository --yes --update ppa:ansible/ansible
 sudo apt install ansible
 ansible --version
+mkdir ansible
+cd ansible/
 ```
+#### create a file called configure_ec2.yml and add below code
+
+
+```bash
+---
+- name: Configure EC2 instances for Docker and kubectl
+  hosts: localhost
+  connection: local
+  become: true
+  tasks:
+    - name: Update apt cache
+      apt:
+        update_cache: yes
+
+    - name: Install required dependencies for Docker
+      apt:
+        name: "{{ item }}"
+        state: present
+      with_items:
+        - apt-transport-https
+        - ca-certificates
+        - curl
+        - software-properties-common
+
+    - name: Add Docker’s official GPG key
+      apt_key:
+        url: https://download.docker.com/linux/ubuntu/gpg
+        state: present
+
+    - name: Add Docker repository
+      apt_repository:
+        repo: "deb [arch=amd64] https://download.docker.com/linux/ubuntu focal stable"
+        state: present
+
+    - name: Install Docker
+      apt:
+        name: docker-ce
+        state: present
+        update_cache: yes
+
+    - name: Add user (ubuntu) to the Docker group
+      user:
+        name: ubuntu
+        group: docker
+        append: yes
+
+    - name: Install kubectl
+      shell: |
+        curl -LO https://storage.googleapis.com/kubernetes-release/release/v1.24.0/bin/linux/amd64/kubectl
+        chmod +x ./kubectl
+        mv ./kubectl /usr/local/bin/kubectl
+
+    - name: Start Docker service
+      service:
+        name: docker
+        state: started
+        enabled: yes
+
+    - name: Check kubectl version
+      shell: kubectl version --client
+      register: kubectl_version
+
+    - name: Print kubectl version
+      debug:
+        msg: "kubectl version: {{ kubectl_version.stdout }}"
+
+    - name: Check Docker version
+      shell: docker --version
+      register: docker_version
+
+    - name: Print Docker version
+      debug:
+        msg: "Docker version: {{ docker_version.stdout }}"
+```
+### 2. Run the playbook
+```bash
+ansible-playbook -i localhost, configure_ec2.yml
+docker --version
+kubectl version --client
+```
+
+
 
 
