@@ -118,6 +118,7 @@ variable "instance_type" {
 variable "key_name" {
   description = "The name of the SSH key pair"
   type        = string
+  default = "saikrishna2527"
 }
 
 variable "volume_size" {
@@ -148,6 +149,7 @@ variable "additional_tags" {
 variable "cluster_name" {
   description = "The name of the EKS cluster"
   type        = string
+  default = "saikrishna2527"
 }
 
 variable "eks_version" {
