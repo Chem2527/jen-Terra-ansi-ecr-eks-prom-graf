@@ -17,7 +17,11 @@ pipeline {
         stage('Terraform Init') {
             steps {
                 script {
-                    sh 'terraform init -backend-config="bucket=my-terraform-state-bucket733751" -backend-config="key=terraform.tfstate" -backend-config="region=eu-north-1"'
+                    // Navigate to the terraform-aws-infrastructure directory before running terraform init
+                    dir('terraform-aws-infrastructure') {
+                        // Initialize terraform
+                        sh 'terraform init -backend-config="bucket=my-terraform-state-bucket733751" -backend-config="key=terraform.tfstate" -backend-config="region=eu-north-1"'
+                    }
                 }
             }
         }
@@ -25,7 +29,10 @@ pipeline {
         stage('Terraform Destroy') {
             steps {
                 script {
-                    sh 'terraform destroy -auto-approve'
+                    dir('terraform-aws-infrastructure') {
+                        // Destroy terraform resources
+                        sh 'terraform destroy -auto-approve'
+                    }
                 }
             }
         }
