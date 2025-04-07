@@ -1,0 +1,124 @@
+pipeline {
+    agent any
+
+    environment {
+        AWS_ACCOUNT_ID = credentials('AWS_ACCOUNT_ID')
+        AWS_ACCESS_KEY_ID = credentials('aws_access_key_id')
+        AWS_SECRET_ACCESS_KEY = credentials('aws_secret_access_key')
+        AWS_REGION = 'eu-north-1'  // Replace with your AWS region
+        ECR_REPO_NAME = credentials('ECR_REPO_NAME')
+        KUBECONFIG = credentials('KUBECONFIG')  // Assuming you have EKS Kubeconfig saved as a Jenkins credential
+    }
+
+    stages {
+        stage('Checkout SCM') {
+            steps {
+                script {
+                    git url: 'https://github.com/Chem2527/jen-Terra-ansi-ecr-eks-prom-graf.git', branch: 'main', credentialsId: 'Git'
+                }
+            }
+        }
+
+        stage('Build Docker Image') {
+            steps {
+                script {
+                    sh 'docker build -t flask-demo-app .'
+                }
+            }
+        }
+
+        stage('Push to ECR') {
+            steps {
+                withCredentials([
+                    string(credentialsId: 'AWS_ACCOUNT_ID', variable: 'AWS_ACCOUNT_ID'),
+                    string(credentialsId: 'ECR_REPO_NAME', variable: 'ECR_REPO_NAME'),
+                    string(credentialsId: 'AWS_REGION', variable: 'AWS_REGION')
+                ]) {
+                    script {
+                        echo "Logging into ECR..."
+                        sh """
+                            aws ecr get-login-password --region "${AWS_REGION}" | docker login --username AWS --password-stdin "${AWS_ACCOUNT_ID}".dkr.ecr."${AWS_REGION}".amazonaws.com
+                        """
+
+                        echo "Tagging Docker image..."
+                        sh """
+                            docker tag flask-demo-app:latest "${AWS_ACCOUNT_ID}".dkr.ecr."${AWS_REGION}".amazonaws.com/"${ECR_REPO_NAME}":latest
+                        """
+
+                        echo "Pushing Docker image to ECR..."
+                        sh """
+                            docker push "${AWS_ACCOUNT_ID}".dkr.ecr."${AWS_REGION}".amazonaws.com/"${ECR_REPO_NAME}":latest
+                        """
+                    }
+                }
+            }
+        }
+
+        stage('Configure Kubernetes on EKS') {
+            steps {
+                withCredentials([file(credentialsId: 'KUBECONFIG', variable: 'KUBECONFIG_FILE')]) {
+                    script {
+                        // Ensure AWS CLI and kubectl are configured to interact with EKS
+                        echo "Configuring kubectl for EKS..."
+                        sh """
+                            export KUBECONFIG=\${KUBECONFIG_FILE}
+                            aws eks update-kubeconfig --region ${AWS_REGION} --name saikrishna2527
+                        """
+                    }
+                }
+            }
+        }
+
+        stage('Deploy to Kubernetes (EKS)') {
+            steps {
+                withCredentials([file(credentialsId: 'KUBECONFIG', variable: 'KUBECONFIG_FILE')]) {
+                    script {
+                        echo "Applying Kubernetes manifests..."
+
+                        // Apply Deployment and Service YAML files to EKS
+                        sh """
+                            kubectl apply -f k8s/deployment.yml
+                            kubectl apply -f k8s/service.yml
+                        """
+                    }
+                }
+            }
+        }
+
+        stage('Configure Kubernetes Health Checks') {
+            steps {
+                script {
+                    echo "Configuring Health Checks for Kubernetes Deployment..."
+
+                    // Update the deployment to include liveness and readiness probes
+                    sh """
+                        kubectl set probe deployment/flask-demo-app --readiness --get-url=http://:8080/healthz
+                        kubectl set probe deployment/flask-demo-app --liveness --get-url=http://:8080/healthz
+                    """
+                }
+            }
+        }
+
+        stage('Configure Auto-Scaling') {
+            steps {
+                script {
+                    echo "Configuring Auto-Scaling for Kubernetes Deployment..."
+
+                    // Enable Horizontal Pod Autoscaler based on CPU utilization
+                    sh """
+                        kubectl autoscale deployment flask-demo-app --cpu-percent=50 --min=1 --max=10
+                    """
+                }
+            }
+        }
+    }
+
+    post {
+        success {
+            echo "CI/CD Pipeline successfully completed! The application is deployed on EKS."
+        }
+        failure {
+            echo "An error occurred during the CI/CD pipeline execution."
+        }
+    }
+}
