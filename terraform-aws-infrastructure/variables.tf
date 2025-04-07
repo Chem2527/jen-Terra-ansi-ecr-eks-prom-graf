@@ -5,10 +5,22 @@ variable "vpc_cidr_block" {
   default     = "10.0.0.0/16"
 }
 
+
+variable "environment" {
+    description = "The environment for the deployment (e.g., dev, prod)"
+    type        = string
+    default     = "dev"
+}
+
+variable "project_name" {
+    description = "The name of the project"
+    type        = string
+    default     = "my-project"
+}
 variable "availability_zones" {
   description = "A list of availability zones"
   type        = list(string)
-  default     = ["us-west-2a", "us-west-2b"]
+  default     = ["eu-north-1a", "eu-north-1b"]
 }
 
 variable "public_subnet_cidrs" {
@@ -94,13 +106,13 @@ variable "egress_cidr_blocks" {
 variable "ami_id" {
   description = "The AMI ID to use for the EC2 instance"
   type        = string
-  default = "value_of_your_ami_id"  # Replace with a valid AMI ID
+  default = "ami-0c1ac8a41498c1a9c"  # Replace with a valid AMI ID
 }
 
 variable "instance_type" {
   description = "The EC2 instance type"
   type        = string
-  default     = "t2.micro"
+  default     = "t3.micro"
 }
 
 variable "key_name" {
@@ -141,19 +153,24 @@ variable "cluster_name" {
 variable "eks_version" {
   description = "The version of the EKS cluster"
   type        = string
-  default     = "1.21"
+  default     = "1.32"
 }
 
 # S3 Bucket for Terraform State Variables
 variable "s3_bucket_name" {
     description = "The name of the S3 bucket for Terraform state"
     type        = string
-    default     = "my-terraform-state-bucket"
+    default     = "new-terraform-state-bucket-name"
 }
 
 # DynamoDB Table for Locking Variables
 variable "dynamodb_table_name" {
   description = "The name of the DynamoDB table for state locking"
   type        = string
+  default = "terraform-locks"  # Replace with your desired table name
 }
 
+variable "aws_region" {
+  description = "The AWS region to deploy resources in"
+  default     = "eu-north-1"  # Replace with your desired default region
+}
