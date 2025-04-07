@@ -303,4 +303,15 @@ pipeline {
     }
 }
 ```
+### 6. storing state file remotely in s3
+Add the below block  in the main.tf for storing the terraform.tfstate remotely under s3 and enable the versioning of bucket.
+```bash
+terraform {
+  backend "s3" {
+    bucket         = "my-terraform-state-bucket733751"
+    key            = "terraform.tfstate"
+    region         = "eu-north-1"
+  }
+}
+```
 
