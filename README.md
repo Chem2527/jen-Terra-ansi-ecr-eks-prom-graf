@@ -482,6 +482,13 @@ sudo systemctl restart jenkins
 kubectl version --client
 docker --version
 ```
+## step 5 connect to the created eks cluster from local machine using below steps
 
+```bash
+aws eks --region eu-north-1 update-kubeconfig --name <name of cluster>
+echo $KUBECONFIG
+kubectl get pods
+kubectl get nodes
+```
 
 
