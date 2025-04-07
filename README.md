@@ -411,7 +411,77 @@ ansible-playbook -i localhost, configure_ec2.yml
 docker --version
 kubectl version --client
 ```
+### 3. automate the ansible playbook using jenkins
 
+Jenkinsfile
+
+```bash
+pipeline {
+    agent any
+
+    environment {
+        AWS_ACCESS_KEY_ID = credentials('aws_access_key_id')
+        AWS_SECRET_ACCESS_KEY = credentials('aws_secret_access_key')
+        AWS_DEFAULT_REGION = 'eu-north-1'
+    }
+
+    stages {
+        stage('Checkout Code') {
+            steps {
+                git url: 'https://github.com/Chem2527/jen-Terra-ansi-ecr-eks-prom-graf.git', branch: 'main', credentialsId: 'Git'
+            }
+        }
+
+        stage('Run Ansible Playbook') {
+            steps {
+                script {
+                    // Run the Ansible playbook (e.g., configure EC2 instances for Docker and kubectl)
+                    sh '''
+                    ansible-playbook -i localhost, /home/ubuntu/ansible/configure_ec2.yml
+                    '''
+                }
+            }
+        }
+    }
+
+    post {
+        success {
+            echo "Ansible playbook executed successfully!"
+        }
+        failure {
+            echo "An error occurred while executing the Ansible playbook."
+        }
+    }
+}
+```
+## step 4 check the pipeline is running smoothly or not
+
+Uninstall the docker,kubectl packages manually and then run pipeline and check whether the deleted packages are installed or not.
+
+```bash
+docker --version
+sudo apt-get purge -y docker-ce docker-ce-cli containerd.io
+sudo apt-get autoremove -y
+kubectl version --client
+sudo rm /usr/local/bin/kubectl
+rm -rf ~/.kube
+sudo rm /usr/local/bin/kustomize
+sudo apt-get purge -y kubectl
+sudo apt-get purge -y kubeadm kubectl kubelet kubernetes-cni
+sudo apt-get autoremove -y
+sudo rm /etc/apt/sources.list.d/kubernetes.list
+sudo apt-get clean
+kubectl version --client
+sudo visudo
+
+Add below to visudo
+```bash
+jenkins ALL=(ALL) NOPASSWD:ALL
+```
+sudo systemctl restart jenkins
+kubectl version --client
+docker --version
+```
 
 
 
