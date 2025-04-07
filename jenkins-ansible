@@ -14,19 +14,6 @@ pipeline {
             }
         }
 
-        stage('Install Ansible') {
-            steps {
-                script {
-                    // Install necessary dependencies for Ansible
-                    sh '''
-                    sudo apt-get update
-                    sudo apt-get install -y python3-pip curl unzip
-                    sudo pip3 install ansible
-                    '''
-                }
-            }
-        }
-
         stage('Run Ansible Playbook') {
             steps {
                 script {
