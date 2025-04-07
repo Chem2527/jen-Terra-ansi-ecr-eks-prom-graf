@@ -1,48 +1,30 @@
+module "eks" {
+  source  = "terraform-aws-modules/eks/aws"
+  version = "~> 20.31"
 
+  cluster_name    = "example"
+  cluster_version = "1.31"
 
-# EKS Cluster
-resource "aws_eks_cluster" "example" {
-    name = var.cluster_name
+  # Optional
+  cluster_endpoint_public_access = true
 
-    access_config {
-        authentication_mode = "API"
+  # Optional: Adds the current caller identity as an administrator via cluster access entry
+  enable_cluster_creator_admin_permissions = true
+
+  eks_managed_node_groups = {
+    example = {
+      instance_types = ["t3.medium"]
+      min_size       = 1
+      max_size       = 3
+      desired_size   = 2
     }
+  }
 
-    role_arn = aws_iam_role.cluster.arn
-    version  = var.eks_version
+  vpc_id     = var.vpc_id
+  subnet_ids = var.subnet_ids
 
-    vpc_config {
-        subnet_ids = var.subnet_ids
-    }
-
-    depends_on = [
-        aws_iam_role_policy_attachment.cluster_AmazonEKSClusterPolicy,
-    ]
+  tags = {
+    Environment = "dev"
+    Terraform   = "true"
+  }
 }
-
-# IAM Role
-resource "aws_iam_role" "cluster" {
-    name = var.iam_role_name
-    assume_role_policy = jsonencode({
-        Version = "2012-10-17"
-        Statement = [
-            {
-                Action = [
-                    "sts:AssumeRole",
-                    "sts:TagSession"
-                ]
-                Effect = "Allow"
-                Principal = {
-                    Service = "eks.amazonaws.com"
-                }
-            },
-        ]
-    })
-}
-
-# IAM Role Policy Attachment
-resource "aws_iam_role_policy_attachment" "cluster_AmazonEKSClusterPolicy" {
-    policy_arn = "arn:aws:iam::aws:policy/AmazonEKSClusterPolicy"
-    role       = aws_iam_role.cluster.name
-}
-
