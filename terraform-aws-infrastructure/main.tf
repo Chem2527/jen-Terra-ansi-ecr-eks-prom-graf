@@ -8,8 +8,8 @@ module "vpc" {
   public_subnet_cidrs = var.public_subnet_cidrs
   private_subnet_cidrs = var.private_subnet_cidrs
   vpc_name = var.vpc_name
+  
 }
-
 # Security Group Module
 module "security_group" {
   source = "./modules/security_group"  # Path to the security group module
@@ -24,6 +24,11 @@ module "security_group" {
   egress_to_port = var.egress_to_port
   egress_protocol = var.egress_protocol
   egress_cidr_blocks = var.egress_cidr_blocks
+
+  tags = {
+    Environment = var.environment
+    Project     = var.project_name
+  }
 }
 
 # EC2 Module
@@ -59,4 +64,11 @@ module "s3" {
   aws_region = var.aws_region  # Add AWS region
 }
 
+terraform {
+  backend "s3" {
+    bucket         = "my-terraform-state-bucket733751"
+    key            = "terraform.tfstate"
+    region         = "eu-north-1"
+  }
+}
 
