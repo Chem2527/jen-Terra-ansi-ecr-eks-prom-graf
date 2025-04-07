@@ -1,7 +1,7 @@
 provider "aws" {
   region = var.aws_region
-  
 }
+
 # VPC Module
 module "vpc" {
   source = "./modules/vpc"  # Path to the VPC module
@@ -11,8 +11,8 @@ module "vpc" {
   public_subnet_cidrs = var.public_subnet_cidrs
   private_subnet_cidrs = var.private_subnet_cidrs
   vpc_name = var.vpc_name
-  
 }
+
 # Security Group Module
 module "security_group" {
   source = "./modules/security_group"  # Path to the security group module
@@ -53,9 +53,8 @@ module "ec2" {
 # EKS Module
 module "eks" {
   source = "./modules/eks"  # Path to the EKS module
-  cluster_name = var.cluster_name
+  vpc_id = module.vpc.vpc_id  # Add the required VPC ID
   subnet_ids = module.vpc.public_subnet_ids
-  eks_version = var.eks_version
 }
 
 # S3 Module for Terraform State Backend
