@@ -472,12 +472,12 @@ sudo apt-get autoremove -y
 sudo rm /etc/apt/sources.list.d/kubernetes.list
 sudo apt-get clean
 kubectl version --client
-sudo visudo
-
-Add below to visudo
+```
 ```bash
+sudo visudo
 jenkins ALL=(ALL) NOPASSWD:ALL
 ```
+```bash
 sudo systemctl restart jenkins
 kubectl version --client
 docker --version
