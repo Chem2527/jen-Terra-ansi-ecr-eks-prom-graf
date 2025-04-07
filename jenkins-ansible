@@ -1,0 +1,50 @@
+pipeline {
+    agent any
+
+    environment {
+        AWS_ACCESS_KEY_ID = credentials('aws_access_key_id')
+        AWS_SECRET_ACCESS_KEY = credentials('aws_secret_access_key')
+        AWS_DEFAULT_REGION = 'eu-north-1'
+    }
+
+    stages {
+        stage('Checkout Code') {
+            steps {
+                git url: 'https://github.com/Chem2527/jen-Terra-ansi-ecr-eks-prom-graf.git', branch: 'main', credentialsId: 'Git'
+            }
+        }
+
+        stage('Install Ansible') {
+            steps {
+                script {
+                    // Install necessary dependencies for Ansible
+                    sh '''
+                    sudo apt-get update
+                    sudo apt-get install -y python3-pip curl unzip
+                    sudo pip3 install ansible
+                    '''
+                }
+            }
+        }
+
+        stage('Run Ansible Playbook') {
+            steps {
+                script {
+                    // Run the Ansible playbook (e.g., configure EC2 instances for Docker and kubectl)
+                    sh '''
+                    ansible-playbook -i localhost, /home/ubuntu/ansible/configure_ec2.yml
+                    '''
+                }
+            }
+        }
+    }
+
+    post {
+        success {
+            echo "Ansible playbook executed successfully!"
+        }
+        failure {
+            echo "An error occurred while executing the Ansible playbook."
+        }
+    }
+}
