@@ -200,6 +200,107 @@ Navigate to manage jenkins ---> Tools ---> check install automatically for git,d
 
 Navigate to manage jenkins --> Manage plugins --> available and install below
 
-Terraform ###(Version 1.0.10)
+```bash
+Terraform 
+```
+### 2. Add below under credentials in jenkins
 
+```bash
+aws_access_key_id 
+aws_secret_access_key
+```
+### 3. Download and install terraform in ec2
+
+```bash
+wget -O - https://apt.releases.hashicorp.com/gpg | sudo gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg
+echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/hashicorp.list
+sudo apt update && sudo apt install terraform
+```
+### 4. jenkins file for resource creation
+```bash
+pipeline {
+    agent any
+
+    environment {
+        AWS_ACCESS_KEY_ID = credentials('aws_access_key_id')
+        AWS_SECRET_ACCESS_KEY = credentials('aws_secret_access_key')
+        AWS_DEFAULT_REGION = 'eu-north-1'
+    }
+
+    stages {
+        stage('Checkout Code') {
+            steps {
+                git url: 'https://github.com/Chem2527/jen-Terra-ansi-ecr-eks-prom-graf.git', branch: 'main', credentialsId: 'Git'
+            }
+        }
+
+        stage('Terraform Init') {
+            steps {
+                script {
+                    // Navigate to the terraform-aws-infrastructure directory before running terraform init
+                    dir('terraform-aws-infrastructure') {
+                        // Initialize terraform
+                        sh 'terraform init -backend-config="bucket=my-terraform-state-bucket733751" -backend-config="key=terraform.tfstate" -backend-config="region=eu-north-1"'
+                    }
+                }
+            }
+        }
+
+        stage('Terraform Apply') {
+            steps {
+                script {
+                    dir('terraform-aws-infrastructure') {
+                        // Apply terraform changes
+                        sh 'terraform apply -auto-approve'
+                    }
+                }
+            }
+        }
+    }
+}
+```
+### 5. jenkins file for resource deletion
+
+```bash
+pipeline {
+    agent any
+
+    environment {
+        AWS_ACCESS_KEY_ID = credentials('aws_access_key_id')
+        AWS_SECRET_ACCESS_KEY = credentials('aws_secret_access_key')
+        AWS_DEFAULT_REGION = 'eu-north-1'
+    }
+
+    stages {
+        stage('Checkout Code') {
+            steps {
+                git url: 'https://github.com/Chem2527/jen-Terra-ansi-ecr-eks-prom-graf.git', branch: 'main', credentialsId: 'Git'
+            }
+        }
+
+        stage('Terraform Init') {
+            steps {
+                script {
+                    // Navigate to the terraform-aws-infrastructure directory before running terraform init
+                    dir('terraform-aws-infrastructure') {
+                        // Initialize terraform
+                        sh 'terraform init -backend-config="bucket=my-terraform-state-bucket733751" -backend-config="key=terraform.tfstate" -backend-config="region=eu-north-1"'
+                    }
+                }
+            }
+        }
+
+        stage('Terraform Destroy') {
+            steps {
+                script {
+                    dir('terraform-aws-infrastructure') {
+                        // Destroy terraform resources
+                        sh 'terraform destroy -auto-approve'
+                    }
+                }
+            }
+        }
+    }
+}
+```
 
