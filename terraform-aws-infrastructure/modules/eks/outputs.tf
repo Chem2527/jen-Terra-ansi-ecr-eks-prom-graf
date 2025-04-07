@@ -18,3 +18,7 @@ output "eks_cluster_role_arn" {
     description = "The ARN of the IAM role associated with the EKS cluster"
     value       = aws_iam_role.cluster.arn
 }
+
+output "cluster_id" {
+  value = aws_eks_cluster.example.id
+}
