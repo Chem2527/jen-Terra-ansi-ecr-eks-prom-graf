@@ -19,6 +19,7 @@ pipeline {
         // Kubernetes Manifests Paths (placeholders)
         DEPLOYMENT_YAML = 'k8s/deployment.yml'
         SERVICE_YAML = 'k8s/service.yaml'
+        HPA_YAML = 'k8s/hpa.yaml'  // New: Horizontal Pod Autoscaler YAML file path
     }
 
     stages {
@@ -85,12 +86,24 @@ pipeline {
             }
         }
 
+        stage('Install Metrics Server') {
+            steps {
+                script {
+                    echo "Installing Metrics Server in EKS..."
+                    // Install Metrics Server (needed for Horizontal Pod Autoscaler)
+                    sh """
+                        kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml
+                    """
+                }
+            }
+        }
+
         stage('Deploy to Kubernetes (EKS)') {
             steps {
                 withCredentials([file(credentialsId: 'KUBECONFIG', variable: 'KUBECONFIG_FILE')]) {
                     script {
                         echo "Applying Kubernetes manifests..."
-
+                        
                         // Apply Kubernetes Deployment and Service YAML files to EKS
                         sh """
                             export KUBECONFIG=${WORKSPACE}/kubeconfig
@@ -101,11 +114,24 @@ pipeline {
                 }
             }
         }
+
+        stage('Apply Horizontal Pod Autoscaler (HPA)') {
+            steps {
+                script {
+                    echo "Applying Horizontal Pod Autoscaler (HPA)..."
+                    // Apply Horizontal Pod Autoscaler (HPA) YAML file to EKS
+                    sh """
+                        export KUBECONFIG=${WORKSPACE}/kubeconfig
+                        kubectl apply -f ${HPA_YAML}
+                    """
+                }
+            }
+        }
     }
 
     post {
         success {
-            echo "CI/CD Pipeline successfully completed! The application is deployed on EKS."
+            echo "CI/CD Pipeline successfully completed! The application is deployed on EKS and HPA is applied."
         }
         failure {
             echo "An error occurred during the CI/CD pipeline execution."
