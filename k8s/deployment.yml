@@ -19,8 +19,8 @@ spec:
         - containerPort: 5000
         resources:
           requests:
-            memory: "64Mi"  # Minimum memory for the container
+            memory: "1Gi"  # Minimum memory for the container
             cpu: "250m"     # Minimum CPU for the container
           limits:
-            memory: "128Mi"  # Maximum memory for the container
+            memory: "1.5Gi"  # Maximum memory for the container
             cpu: "500m"      # Maximum CPU for the container
