@@ -3,7 +3,7 @@ kind: Deployment
 metadata:
   name: my-app
 spec:
-  replicas: 3  # Number of app replicas (you can auto-scale later)
+  replicas: 3  # Number of app replicas
   selector:
     matchLabels:
       app: my-app
@@ -17,4 +17,10 @@ spec:
         image: "869700439509.dkr.ecr.eu-north-1.amazonaws.com/kavitha/repo:latest"
         ports:
         - containerPort: 5000
-
+        resources:
+          requests:
+            memory: "64Mi"  # Minimum memory for the container
+            cpu: "250m"     # Minimum CPU for the container
+          limits:
+            memory: "128Mi"  # Maximum memory for the container
+            cpu: "500m"      # Maximum CPU for the container
