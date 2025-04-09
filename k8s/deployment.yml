@@ -3,7 +3,7 @@ kind: Deployment
 metadata:
   name: my-app
 spec:
-  replicas: 3  # Number of app replicas
+  replicas: 3
   selector:
     matchLabels:
       app: my-app
@@ -19,8 +19,19 @@ spec:
         - containerPort: 5000
         resources:
           requests:
-            memory: "1Gi"  # Minimum memory for the container
-            cpu: "250m"     # Minimum CPU for the container
+            memory: "1Gi"
+            cpu: "250m"
           limits:
-            memory: "1.5Gi"  # Maximum memory for the container
-            cpu: "500m"      # Maximum CPU for the container
+            memory: "1.5Gi"
+            cpu: "500m"
+        env:
+        - name: DB_HOST
+          value: "13.50.248.202"
+        - name: DB_PORT
+          value: "5432"
+        - name: DB_NAME
+          value: "db1"
+        - name: DB_USER
+          value: "sai"
+        - name: DB_PASSWORD
+          value: "Sai@2024"
