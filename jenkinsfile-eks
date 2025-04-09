@@ -74,11 +74,11 @@ pipeline {
                     script {
                         echo "Configuring kubectl for EKS..."
                         // Set up kubectl to interact with EKS
-                        // Save the KUBECONFIG to a location with write permissions
+                        // Save the KUBECONFIG to a writable location in the Jenkins workspace
                         sh """
-                            export KUBECONFIG=/tmp/kubeconfig
-                            cp ${KUBECONFIG_FILE} /tmp/kubeconfig
-                            aws eks update-kubeconfig --region ${AWS_REGION} --name example --kubeconfig /tmp/kubeconfig
+                            export KUBECONFIG=${WORKSPACE}/kubeconfig
+                            cp ${KUBECONFIG_FILE} ${WORKSPACE}/kubeconfig
+                            aws eks update-kubeconfig --region ${AWS_REGION} --name example --kubeconfig ${WORKSPACE}/kubeconfig
                         """
                     }
                 }
@@ -93,7 +93,7 @@ pipeline {
 
                         // Apply Kubernetes Deployment and Service YAML files to EKS
                         sh """
-                            export KUBECONFIG=/tmp/kubeconfig
+                            export KUBECONFIG=${WORKSPACE}/kubeconfig
                             kubectl apply -f ${DEPLOYMENT_YAML}
                             kubectl apply -f ${SERVICE_YAML}
                         """
