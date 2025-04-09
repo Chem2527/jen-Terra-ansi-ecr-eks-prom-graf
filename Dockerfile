@@ -1,5 +1,5 @@
 # Use official Python runtime as the base image
-FROM python:3.9-slim
+FROM python:3.8-slim
 
 # Install system dependencies for psycopg2
 RUN apt-get update && \
