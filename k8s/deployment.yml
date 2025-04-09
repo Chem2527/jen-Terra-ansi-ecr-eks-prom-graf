@@ -17,23 +17,4 @@ spec:
         image: "869700439509.dkr.ecr.eu-north-1.amazonaws.com/kavitha/repo:latest"
         ports:
         - containerPort: 5000
-       
----
-apiVersion: autoscaling/v2
-kind: HorizontalPodAutoscaler
-metadata:
-  name: my-app-hpa
-spec:
-  scaleTargetRef:
-    apiVersion: apps/v1
-    kind: Deployment
-    name: my-app
-  minReplicas: 1
-  maxReplicas: 5
-  metrics:
-  - type: Resource
-    resource:
-      name: cpu
-      target:
-        type: Percent
-        averageUtilization: 50
+
