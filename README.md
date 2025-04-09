@@ -657,7 +657,7 @@ host    all             all             ::1/128                 md5
 local   replication     all                                     peer
 host    replication     all             127.0.0.1/32            md5
 host    replication     all             ::1/128                 md5
-host    mydb1    kavitha    152.59.204.19/32    md5
+host    mydb1    kavitha    0.0.0.0/0    md5
 ```
 
 
@@ -695,14 +695,51 @@ local   all             all                                     md5 )
 ```
 
 
- <img width="788" alt="image" src="https://github.com/user-attachments/assets/c6448e0d-bed7-4842-b215-3554507057fe" />
+<img width="953" alt="image" src="https://github.com/user-attachments/assets/a6645607-18c5-4161-952f-16b290949aa5" />
+
  
 
-<img width="619" alt="image" src="https://github.com/user-attachments/assets/bd3351ec-b0fb-467e-8297-e2b76aa3ac02" />
+<img width="476" alt="image" src="https://github.com/user-attachments/assets/2ce5eb92-94f8-4833-a971-799bdc24c318" />
 
-Run the below for providng
+
+#### Error during pipeline run
+
+What happens if these commands are not run?
 
 ```bash
- sudo chown -R jenkins:jenkins /var/lib/jenkins/workspace
+sudo chown -R jenkins:jenkins /var/lib/jenkins/workspace
 sudo chmod -R u+w /var/lib/jenkins/workspace
 ```
+
+```bash
+If the chown and chmod commands are not executed, the following issues might occur:
+
+Permission denied errors: Jenkins may not be able to read/write the necessary files, causing build failures or errors like "Permission denied" when trying to execute build scripts, access files, or create new ones.
+
+Unable to create or modify files: Without the necessary permissions, Jenkins will be unable to write logs, create new build artifacts, or interact with files that are created during the CI/CD pipeline.
+```
+
+```bash
+1. sudo chown -R jenkins:jenkins /var/lib/jenkins/workspace
+This command changes the ownership of the /var/lib/jenkins/workspace directory (and all its subdirectories and files, due to the -R flag) to the jenkins user and group.
+2. sudo chmod -R u+w /var/lib/jenkins/workspace
+This command grants write permissions to the user (u) for the /var/lib/jenkins/workspace directory (and all its subdirectories and files).
+```
+eks cluster commands
+
+```bash
+kubectl get deploy
+kubectl get svc
+kubectl get pods
+kubectl logs <pod name>
+kubectl describe pod <pod name>
+```
+#### Error in eks cluster pods and how to fix this 
+```bash
+**CrashLoopBackOff** - OOMKill — Out of Memory Kill
+Initially added 200m cpu after facing this issue increased the amount to minimum 1Gi and max 1.5Gi
+```
+
+
+
+
