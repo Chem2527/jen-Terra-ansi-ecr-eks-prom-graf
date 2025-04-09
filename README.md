@@ -492,7 +492,204 @@ kubectl get nodes
 ```
 
 ## sprint 4
- created an python application and deployed it to eks.
+
+ created an python application and postgres db and deployed the application to eks.
+
+
+## Run below steps in Ec2 where u want to host PostgresDb:
+```bash
+1. sudo apt update -y
+
+2. sudo apt upgrade -y
+
+3. sudo apt install postgresql
+
+4. sudo systemctl start postgresql
+
+5. sudo systemctl status postgresql # (it will show active status)
+
+
+6.  su - ubuntu # (switch to  ubuntu user - This is mandatory step so wherever your current  path is  just change directory  in upcoming steps u will get to know why)
+
+7.   psql ( It will throw  error psql: error: connection to server on socket "/var/run/postgresql/.s.PGSQL.5432" failed: FATAL:  role "ubuntu" does not exist)
+
+8. sudo -i -u postgres # (Switch to postgres Default user "postgres")
+
+9. psql
+
+10. CREATE ROLE ubuntu WITH LOGIN PASSWORD 'ubuntu';   #(Note: create the username with exactly as"ubuntu" as by default only peer authentication is enabled in ec2.)
+
+11. vi /etc/postgresql/16/main pg_hba.conf # (If someone wants to create a different role name navigate to "/etc/postgresql/<version>/main/" and modify   file pg_hba.conf by looking for  words "all all peer" and modify this to as shown below
+
+```bash
+root@ip-172-31-6-55:~# sudo cat /etc/postgresql/16/main/pg_hba.conf
+
+# PostgreSQL Client Authentication Configuration File
+# ===================================================
+#
+# Refer to the "Client Authentication" section in the PostgreSQL
+# documentation for a complete description of this file. A short
+# synopsis follows.
+#
+# ----------------------
+# Authentication Records
+# ----------------------
+#
+# This file controls: which hosts are allowed to connect, how clients
+# are authenticated, which PostgreSQL user names they can use, which
+# databases they can access.  Records take one of these forms:
+#
+# local         DATABASE  USER  METHOD  [OPTIONS]
+# host          DATABASE  USER  ADDRESS  METHOD  [OPTIONS]
+# hostssl       DATABASE  USER  ADDRESS  METHOD  [OPTIONS]
+# hostnossl     DATABASE  USER  ADDRESS  METHOD  [OPTIONS]
+# hostgssenc    DATABASE  USER  ADDRESS  METHOD  [OPTIONS]
+# hostnogssenc  DATABASE  USER  ADDRESS  METHOD  [OPTIONS]
+#
+# (The uppercase items must be replaced by actual values.)
+#
+# The first field is the connection type:
+# - "local" is a Unix-domain socket
+# - "host" is a TCP/IP socket (encrypted or not)
+# - "hostssl" is a TCP/IP socket that is SSL-encrypted
+# - "hostnossl" is a TCP/IP socket that is not SSL-encrypted
+# - "hostgssenc" is a TCP/IP socket that is GSSAPI-encrypted
+# - "hostnogssenc" is a TCP/IP socket that is not GSSAPI-encrypted
+#
+# DATABASE can be "all", "sameuser", "samerole", "replication", a
+# database name, a regular expression (if it starts with a slash (/))
+# or a comma-separated list thereof.  The "all" keyword does not match
+# "replication".  Access to replication must be enabled in a separate
+# record (see example below).
+#
+# USER can be "all", a user name, a group name prefixed with "+", a
+# regular expression (if it starts with a slash (/)) or a comma-separated
+# list thereof.  In both the DATABASE and USER fields you can also write
+# a file name prefixed with "@" to include names from a separate file.
+#
+# ADDRESS specifies the set of hosts the record matches.  It can be a
+# host name, or it is made up of an IP address and a CIDR mask that is
+# an integer (between 0 and 32 (IPv4) or 128 (IPv6) inclusive) that
+# specifies the number of significant bits in the mask.  A host name
+# that starts with a dot (.) matches a suffix of the actual host name.
+# Alternatively, you can write an IP address and netmask in separate
+# columns to specify the set of hosts.  Instead of a CIDR-address, you
+# can write "samehost" to match any of the server's own IP addresses,
+# or "samenet" to match any address in any subnet that the server is
+# directly connected to.
+#
+# METHOD can be "trust", "reject", "md5", "password", "scram-sha-256",
+# "gss", "sspi", "ident", "peer", "pam", "ldap", "radius" or "cert".
+# Note that "password" sends passwords in clear text; "md5" or
+# "scram-sha-256" are preferred since they send encrypted passwords.
+#
+# OPTIONS are a set of options for the authentication in the format
+# NAME=VALUE.  The available options depend on the different
+# authentication methods -- refer to the "Client Authentication"
+# section in the documentation for a list of which options are
+# available for which authentication methods.
+#
+# Database and user names containing spaces, commas, quotes and other
+# special characters must be quoted.  Quoting one of the keywords
+# "all", "sameuser", "samerole" or "replication" makes the name lose
+# its special character, and just match a database or username with
+# that name.
+#
+# ---------------
+# Include Records
+# ---------------
+#
+# This file allows the inclusion of external files or directories holding
+# more records, using the following keywords:
+#
+# include           FILE
+# include_if_exists FILE
+# include_dir       DIRECTORY
+#
+# FILE is the file name to include, and DIR is the directory name containing
+# the file(s) to include.  Any file in a directory will be loaded if suffixed
+# with ".conf".  The files of a directory are ordered by name.
+# include_if_exists ignores missing files.  FILE and DIRECTORY can be
+# specified as a relative or an absolute path, and can be double-quoted if
+# they contain spaces.
+#
+# -------------
+# Miscellaneous
+# -------------
+#
+# This file is read on server startup and when the server receives a
+# SIGHUP signal.  If you edit the file on a running system, you have to
+# SIGHUP the server for the changes to take effect, run "pg_ctl reload",
+# or execute "SELECT pg_reload_conf()".
+#
+# ----------------------------------
+# Put your actual configuration here
+# ----------------------------------
+#
+# If you want to allow non-local connections, you need to add more
+# "host" records.  In that case you will also need to make PostgreSQL
+# listen on a non-local interface via the listen_addresses
+# configuration parameter, or via the -i or -h command line switches.
+
+# DO NOT DISABLE!
+# If you change this first entry you will need to make sure that the
+# database superuser can access the database using some other method.
+# Noninteractive access to all databases is required during automatic
+# maintenance (custom daily cronjobs, replication, and similar tasks).
+#
+# Database administrative login by Unix domain socket
+local   all             postgres                                peer
+
+# TYPE  DATABASE        USER            ADDRESS                 METHOD
+
+# "local" is for Unix domain socket connections only
+local   all             all                                     md5
+# IPv4 local connections:
+host    all             all             127.0.0.1/32            md5
+# IPv6 local connections:
+host    all             all             ::1/128                 md5
+# Allow replication connections from localhost, by a user with the
+# replication privilege.
+local   replication     all                                     peer
+host    replication     all             127.0.0.1/32            md5
+host    replication     all             ::1/128                 md5
+host    mydb1    kavitha    152.59.204.19/32    md5
+```
+
+
+"local" is for Unix domain socket connections only
+local   all             all                                     md5 )
+
+**md5 changes authentication from local to password based**
+
+ ### Note: Im using password based authentication so creating role with name "kavitha" and im going to create database "mydb1"
+
+```bash
+12. CREATE USER kavitha WITH PASSWORD 'your_password';
+
+13. ALTER ROLE kavitha WITH SUPERUSER; # (Providing root access to ubuntu user- not recommened)
+
+
+14. \q # (exit postgresql)
+
+15. createdb mydb1 -O kavitha
+
+16. exit
+
+17. psql -U kavitha -d mydb1 # (For testing purpose we will be establishing a connection to database which is owned by ubuntu user)
+
+18. \l #(it will list all the databases )
+
+19. Navigate to ubuntu@postgres:/etc/postgresql/16/main and modify   **postgresql.conf** and look for **#listen_addresses = 'localhost'** and replace it with **listen_addresses = '*'**
+
+
+
+
+20. sudo systemctl restart postgresql
+
+21. sudo service postgresql restart
+```
+
 
  <img width="788" alt="image" src="https://github.com/user-attachments/assets/c6448e0d-bed7-4842-b215-3554507057fe" />
  
