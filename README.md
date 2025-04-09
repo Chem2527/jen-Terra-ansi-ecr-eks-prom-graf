@@ -492,5 +492,11 @@ kubectl get nodes
 ```
 
 ## sprint 4
+ created an python application and deployed it to eks.
+
+ <img width="788" alt="image" src="https://github.com/user-attachments/assets/c6448e0d-bed7-4842-b215-3554507057fe" />
+ 
+
+<img width="619" alt="image" src="https://github.com/user-attachments/assets/bd3351ec-b0fb-467e-8297-e2b76aa3ac02" />
 
 
