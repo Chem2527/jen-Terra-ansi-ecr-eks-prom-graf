@@ -260,7 +260,7 @@ pipeline {
 }
 ```
 ### 5. jenkins file for resource deletion
-### Note: manually delete the elb before running the jenkins job for resource deletion as nic is dependent of elb 
+### Note: manually delete the elb and sg before running the jenkins job for resource deletion as nic is dependent of elb 
 ```bash
 pipeline {
     agent any
