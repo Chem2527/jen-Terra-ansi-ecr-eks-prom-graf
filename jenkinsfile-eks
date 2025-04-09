@@ -76,7 +76,7 @@ pipeline {
                         // Set up kubectl to interact with EKS
                         sh """
                             export KUBECONFIG=\${KUBECONFIG_FILE}
-                            aws eks update-kubeconfig --region eu-north-1 --name example
+                            aws eks update-kubeconfig --region ${AWS_REGION} --name example
                         """
                     }
                 }
@@ -98,7 +98,7 @@ pipeline {
                 }
             }
         }
-
+    }
 
     post {
         success {
