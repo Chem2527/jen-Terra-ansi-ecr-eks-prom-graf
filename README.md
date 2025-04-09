@@ -700,4 +700,9 @@ local   all             all                                     md5 )
 
 <img width="619" alt="image" src="https://github.com/user-attachments/assets/bd3351ec-b0fb-467e-8297-e2b76aa3ac02" />
 
+Run the below for providng
 
+```bash
+ sudo chown -R jenkins:jenkins /var/lib/jenkins/workspace
+sudo chmod -R u+w /var/lib/jenkins/workspace
+```
