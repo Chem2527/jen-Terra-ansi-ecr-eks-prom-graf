@@ -520,9 +520,13 @@ kubectl get nodes
 10. CREATE ROLE ubuntu WITH LOGIN PASSWORD 'ubuntu';   #(Note: create the username with exactly as"ubuntu" as by default only peer authentication is enabled in ec2.)
 
 11. vi /etc/postgresql/16/main pg_hba.conf # (If someone wants to create a different role name navigate to "/etc/postgresql/<version>/main/" and modify   file pg_hba.conf by looking for  words "all all peer" and modify this to as shown below
-
+```
 ```bash
+**Note:** Update the pg_hba.conf file to allow connections from the IP address of the machine where your application is running. This ensures PostgreSQL permits access from that specific remote server rather than just the local host.
+
+
 root@ip-172-31-6-55:~# sudo cat /etc/postgresql/16/main/pg_hba.conf
+
 
 # PostgreSQL Client Authentication Configuration File
 # ===================================================
