@@ -14,21 +14,10 @@ spec:
     spec:
       containers:
       - name: my-app
-        image: "123456789012.dkr.ecr.us-west-2.amazonaws.com/my-app-repo:latest"
+        image: "869700439509.dkr.ecr.eu-north-1.amazonaws.com/kavitha/repo:latest"
         ports:
         - containerPort: 5000
-        livenessProbe:
-          httpGet:
-            path: /health
-            port: 5000
-          initialDelaySeconds: 10
-          periodSeconds: 10
-        readinessProbe:
-          httpGet:
-            path: /health
-            port: 5000
-          initialDelaySeconds: 5
-          periodSeconds: 5
+       
 ---
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
