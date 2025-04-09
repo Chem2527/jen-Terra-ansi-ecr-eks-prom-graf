@@ -18,7 +18,7 @@ pipeline {
         
         // Kubernetes Manifests Paths (placeholders)
         DEPLOYMENT_YAML = 'k8s/deployment.yml'
-        SERVICE_YAML = 'k8s/service.yml'
+        SERVICE_YAML = 'k8s/service.yaml'
     }
 
     stages {
