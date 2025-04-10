@@ -181,6 +181,8 @@ AWS_REGION:
 Enter your AWS region (e.g., ap-south-1) as the Secret.
 
 ID: Name the credential AWS_REGION
+<img width="902" alt="image" src="https://github.com/user-attachments/assets/6e96a457-7c57-4f6d-8853-ea17c4049022" />
+
 ```
 ### 9. Add Environmental variables in jenkins GUI
 
