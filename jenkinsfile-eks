@@ -69,22 +69,22 @@ pipeline {
             }
         }
 
-        stage('Configure Kubernetes on EKS') {
-    steps {
-        withCredentials([file(credentialsId: 'KUBECONFIG', variable: 'KUBECONFIG_FILE')]) {
-            script {
-                echo "Configuring kubectl for EKS..."
-
-                sh """
-                    mkdir -p ${WORKSPACE}/.kube
-                    cp "\$KUBECONFIG_FILE" ${WORKSPACE}/.kube/config
-                    export KUBECONFIG=${WORKSPACE}/.kube/config
-                    aws eks update-kubeconfig --region ${AWS_REGION} --name example --kubeconfig=${WORKSPACE}/.kube/config
-                """
+stage('Configure Kubernetes on EKS') {
+            steps {
+                withCredentials([file(credentialsId: 'KUBECONFIG', variable: 'KUBECONFIG_FILE')]) {
+                    script {
+                        echo "Configuring kubectl for EKS..."
+                        // Set up kubectl to interact with EKS
+                        // Save the KUBECONFIG to a writable location in the Jenkins workspace
+                        sh """
+                            export KUBECONFIG=${WORKSPACE}/kubeconfig
+                            cp ${KUBECONFIG_FILE} ${WORKSPACE}/kubeconfig
+                            aws eks update-kubeconfig --region ${AWS_REGION} --name example --kubeconfig ${WORKSPACE}/kubeconfig
+                        """
+                    }
+                }
             }
         }
-    }
-}
 
 
         stage('Install Metrics Server') {
