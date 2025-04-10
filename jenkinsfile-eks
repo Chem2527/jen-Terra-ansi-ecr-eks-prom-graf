@@ -86,6 +86,21 @@ pipeline {
             }
         }
 
+        stage('Install Metrics Server (if not installed)') {
+            steps {
+                withCredentials([file(credentialsId: 'KUBECONFIG', variable: 'KUBECONFIG_FILE')]) {
+                    script {
+                        echo "Checking if Metrics Server is installed..."
+                        // Install Metrics Server if not already installed
+                        sh """
+                            export KUBECONFIG=${WORKSPACE}/kubeconfig
+                            kubectl get deployment metrics-server -n kube-system || kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml
+                        """
+                    }
+                }
+            }
+        }
+
         stage('Deploy to Kubernetes (EKS)') {
             steps {
                 withCredentials([file(credentialsId: 'KUBECONFIG', variable: 'KUBECONFIG_FILE')]) {
