@@ -610,14 +610,19 @@ This command changes the ownership of the /var/lib/jenkins/workspace directory (
 2. sudo chmod -R u+w /var/lib/jenkins/workspace
 This command grants write permissions to the user (u) for the /var/lib/jenkins/workspace directory (and all its subdirectories and files).
 ```
-eks cluster commands
+## eks commands
 
 ```bash
 kubectl get deploy
 kubectl get svc
 kubectl get pods
-kubectl logs <pod name>
-kubectl describe pod <pod name>
+kubectl describe pod <pod_name>
+kubectl get hpa
+kubectl get deployment metrics-server -n kube-system
+kubectl logs deployment/metrics-server -n kube-system
+kubectl delete svc <service_name>
+kubectl delete deploy <deployment_name>
+kubectl delete hpa <hpa_name>
 ```
 #### Error in eks cluster pods and how to fix this 
 ```bash
@@ -664,4 +669,5 @@ Readiness Probe: Checks if your pod is ready to handle requests (e.g., checks `/
 
 Liveness Probe: Monitors if your pod is still working; if it fails (e.g., `/health` fails), it restarts the pod to keep things running.
 ```
+
 
