@@ -181,9 +181,10 @@ AWS_REGION:
 Enter your AWS region (e.g., ap-south-1) as the Secret.
 
 ID: Name the credential AWS_REGION
+```
 <img width="902" alt="image" src="https://github.com/user-attachments/assets/6e96a457-7c57-4f6d-8853-ea17c4049022" />
 
-```
+
 ### 9. Add Environmental variables in jenkins GUI
 
  Navigate to manage jenkins ---> system ---> check the nevironmental variables box and add below
@@ -629,8 +630,9 @@ kubectl get hpa
 
 NAME         REFERENCE           TARGETS              MINPODS   MAXPODS   REPLICAS   AGE
 my-app-hpa   Deployment/my-app   cpu: <unknown>/80%   2         10        3          23s
-<img width="512" alt="image" src="https://github.com/user-attachments/assets/e44a0a39-65a9-4d37-93d0-64b6b4751c35" />
 ```
+<img width="512" alt="image" src="https://github.com/user-attachments/assets/e44a0a39-65a9-4d37-93d0-64b6b4751c35" />
+
 
 
 
