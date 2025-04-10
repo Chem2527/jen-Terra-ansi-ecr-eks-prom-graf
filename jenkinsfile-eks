@@ -21,6 +21,9 @@ pipeline {
         SERVICE_YAML = 'k8s/service.yaml'
         HPA_YAML = 'k8s/hpa.yaml'  // Add path to your HPA YAML file
         METRICS_SERVER_RBAC_YAML = 'k8s/metrics-server-rbac.yaml'  // Path to your metrics-server-rbac.yaml file
+
+        // Slack Webhook URL (stored in Jenkins credentials)
+        SLACK_WEBHOOK_URL = credentials('SLACK_WEBHOOK_URL') // Jenkins stored Slack Webhook URL
     }
 
     stages {
@@ -154,9 +157,13 @@ pipeline {
     post {
         success {
             echo "CI/CD Pipeline successfully completed! The application is deployed on EKS and auto-scaling is configured."
+            // Send a success Slack notification
+            slackSend (channel: '#jenkins-notifications', color: 'good', message: "CI/CD Pipeline SUCCESS: The application has been successfully deployed to EKS and auto-scaling is configured.")
         }
         failure {
             echo "An error occurred during the CI/CD pipeline execution."
+            // Send a failure Slack notification
+            slackSend (channel: '#jenkins-notifications', color: 'danger', message: "CI/CD Pipeline FAILURE: An error occurred during the pipeline execution.")
         }
     }
 }
