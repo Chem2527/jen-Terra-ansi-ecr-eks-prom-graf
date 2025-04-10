@@ -8,9 +8,8 @@ pipeline {
         AWS_SECRET_ACCESS_KEY = credentials('aws_secret_access_key')
         AWS_REGION = 'eu-north-1'  // Replace with your AWS region
 
-        // ECR Repository Name and Kubernetes Config
+        // ECR Repository Name
         ECR_REPO_NAME = credentials('ECR_REPO_NAME')
-        KUBECONFIG_FILE = credentials('KUBECONFIG')  // Jenkins stored kubeconfig file
 
         // Git repository URL and branch
         GIT_REPO_URL = 'https://github.com/Chem2527/jen-Terra-ansi-ecr-eks-prom-graf.git'
@@ -40,11 +39,9 @@ pipeline {
 
         stage('Push to ECR') {
             steps {
-                withCredentials([
-                    string(credentialsId: 'AWS_ACCOUNT_ID', variable: 'AWS_ACCOUNT_ID'),
-                    string(credentialsId: 'ECR_REPO_NAME', variable: 'ECR_REPO_NAME'),
-                    string(credentialsId: 'AWS_REGION', variable: 'AWS_REGION')
-                ]) {
+                withCredentials([string(credentialsId: 'AWS_ACCOUNT_ID', variable: 'AWS_ACCOUNT_ID'),
+                                 string(credentialsId: 'ECR_REPO_NAME', variable: 'ECR_REPO_NAME'),
+                                 string(credentialsId: 'AWS_REGION', variable: 'AWS_REGION')]) {
                     script {
                         sh """
                             aws ecr get-login-password --region "${AWS_REGION}" | docker login --username AWS --password-stdin "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com"
@@ -56,33 +53,18 @@ pipeline {
             }
         }
 
-        stage('Configure Kubernetes on EKS') {
+        stage('Deploy to Kubernetes (EKS)') {
             steps {
                 withCredentials([file(credentialsId: 'KUBECONFIG', variable: 'KUBECONFIG_FILE_PATH')]) {
                     script {
                         echo "Configuring kubectl for EKS..."
-                        // Set up kubectl to interact with EKS
-                        // Use a writable path to save the kubeconfig from Jenkins credentials
+                        // Use the kubeconfig credential directly in kubectl commands
                         sh """
-                            export KUBECONFIG=${WORKSPACE}/kubeconfig
-                            cp ${KUBECONFIG_FILE_PATH} ${WORKSPACE}/kubeconfig
-                            chmod 600 ${WORKSPACE}/kubeconfig
+                            export KUBECONFIG=${KUBECONFIG_FILE_PATH}
+                            kubectl apply -f ${DEPLOYMENT_YAML}
+                            kubectl apply -f ${SERVICE_YAML}
                         """
                     }
-                }
-            }
-        }
-
-        stage('Deploy to Kubernetes (EKS)') {
-            steps {
-                script {
-                    echo "Applying Kubernetes manifests..."
-                    // Apply Kubernetes Deployment and Service YAML files to EKS
-                    sh """
-                        export KUBECONFIG=${WORKSPACE}/kubeconfig
-                        kubectl apply -f ${DEPLOYMENT_YAML}
-                        kubectl apply -f ${SERVICE_YAML}
-                    """
                 }
             }
         }
