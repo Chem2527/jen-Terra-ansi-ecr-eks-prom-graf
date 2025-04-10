@@ -623,7 +623,14 @@ kubectl describe pod <pod name>
 **CrashLoopBackOff** - OOMKill — Out of Memory Kill
 Initially added 200m cpu after facing this issue increased the amount to minimum 1Gi and max 1.5Gi
 ```
+How to fix the below error
+```bash
+kubectl get hpa
 
+NAME         REFERENCE           TARGETS              MINPODS   MAXPODS   REPLICAS   AGE
+my-app-hpa   Deployment/my-app   cpu: <unknown>/80%   2         10        3          23s
+<img width="512" alt="image" src="https://github.com/user-attachments/assets/e44a0a39-65a9-4d37-93d0-64b6b4751c35" />
+```
 
 
 
