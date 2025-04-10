@@ -1,5 +1,92 @@
 # Jen-Terra-ansi-ecr-eks-prom-graf
 
+## High-Level Architecture and Flow 
+
+### Terraform (Provisioning AWS Resources):
+
+```bash
+Purpose: Terraform provisions the infrastructure on AWS.
+
+Resources Created:
+
+VPC: Virtual Private Cloud for networking.
+
+EKS Cluster: Managed Kubernetes cluster for containerized workloads.
+
+Subnets: Public and private subnets for traffic segmentation.
+
+Security Groups: Network security rules for access control.
+
+EC2 Instances: Virtual machines to run Jenkins and Ansible for CI/CD automation.
+
+State Storage: Terraform state files are stored in S3 to track infrastructure.
+
+Jenkins (CI/CD Pipeline):
+
+Jenkins on EC2: Jenkins installed on an EC2 instance manages the entire CI/CD pipeline.
+
+Pipeline Stages:
+
+Terraform: Triggers Terraform scripts to create AWS resources.
+
+Docker Build: Jenkins builds the Python Web Application into a Docker container.
+
+Push to ECR: Jenkins pushes the Docker image to AWS ECR (Elastic Container Registry).
+
+Ansible: Configures EC2 instances (Docker, kubectl installation, etc.).
+
+Kubernetes Deployment: Jenkins deploys the web application and PostgreSQL in the EKS cluster.
+
+Ansible (Configuration Management):
+
+EC2 Setup: Ansible configures the EC2 instances (install Docker, kubectl, etc.).
+
+Docker Installation: Ensures Docker is installed on EC2 instances to run containers.
+
+kubectl Installation: Configures kubectl for managing Kubernetes clusters.
+
+Python Dockerized Web Application:
+
+Python Web Application: A Python web application (e.g., Flask) is containerized using Docker.
+
+Dockerfile: Defines how to build the container.
+
+Dependencies: Includes necessary libraries (Flask, PostgreSQL drivers).
+
+Docker Image: The web application is packaged as a Docker image and pushed to AWS ECR.
+
+PostgreSQL Database:
+
+PostgreSQL on Ec2: PostgreSQL runs in a ec2.
+
+
+
+Database Connection: The Python application connects to PostgreSQL via environment variables 
+
+Kubernetes (Application Deployment):
+
+Deployment & Service: The Python web application and PostgreSQL are deployed using Kubernetes manifests (deployment.yml and service.yml).
+
+Deployment.yml: Defines Kubernetes Pods for the web application and PostgreSQL.
+
+Service.yml: Exposes the application and database to other services or external traffic.
+
+Health Checks:
+
+Readiness Probe: Ensures the application is ready to accept traffic.
+
+Liveness Probe: Ensures the application is alive and not stuck.
+
+Horizontal Pod Autoscaler (HPA): Automatically scales the Python web app based on metrics such as CPU usage.
+
+Monitoring and Metrics:
+
+Prometheus: Scrapes metrics from the Kubernetes cluster, web app, and PostgreSQL.
+
+Grafana: Visualizes metrics collected by Prometheus to monitor the web application’s performance, PostgreSQL DB health, and Kubernetes resources.
+```
+
+
 ## Sprint 1: Architecture Design, Dockerization, and Jenkins Setup
 
 ### 1. Overview
