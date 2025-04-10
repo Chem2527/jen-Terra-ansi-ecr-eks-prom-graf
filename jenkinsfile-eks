@@ -61,18 +61,20 @@ pipeline {
             script {
                 echo "Configuring kubectl for EKS..."
 
-                // Use a safer path for kube config
                 def kubeDir = "${env.WORKSPACE}/kube"
                 sh """
                     mkdir -p ${kubeDir}
-                    cp "${KUBECONFIG_FILE}" "${kubeDir}/config"
-                    export KUBECONFIG="${kubeDir}/config"
-                    aws eks update-kubeconfig --region ${AWS_REGION} --name example --kubeconfig "${kubeDir}/config"
+                    cp ${KUBECONFIG_FILE} ${kubeDir}/original-config
+                    cp ${kubeDir}/original-config ${kubeDir}/config
+                    chmod 600 ${kubeDir}/config
+                    export KUBECONFIG=${kubeDir}/config
+                    aws eks update-kubeconfig --region ${AWS_REGION} --name example --kubeconfig ${kubeDir}/config
                 """
             }
         }
     }
 }
+
 
 
         stage('Install Metrics Server') {
