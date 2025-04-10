@@ -1,0 +1,55 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboards
+  namespace: monitoring  # Use the namespace where your Grafana instance is deployed
+  labels:
+    grafana_dashboard: "1"
+data:
+  flask-app-dashboard.json: |
+    {
+      "dashboard": {
+        "id": null,
+        "title": "Flask Application Performance",
+        "tags": ["flask", "application"],
+        "style": "dark",
+        "timezone": "browser",
+        "panels": [
+          {
+            "type": "graph",
+            "title": "CPU Usage",
+            "targets": [
+              {
+                "expr": "avg(rate(container_cpu_usage_seconds_total{pod=~\"flask-demo-app.*\"}[5m])) by (pod)",
+                "format": "time_series",
+                "intervalFactor": 2
+              }
+            ],
+            "xaxis": {
+              "mode": "time"
+            },
+            "yaxis": {
+              "format": "percent"
+            }
+          },
+          {
+            "type": "graph",
+            "title": "Memory Usage",
+            "targets": [
+              {
+                "expr": "avg(container_memory_usage_bytes{pod=~\"flask-demo-app.*\"}) by (pod)",
+                "format": "time_series",
+                "intervalFactor": 2
+              }
+            ],
+            "xaxis": {
+              "mode": "time"
+            },
+            "yaxis": {
+              "format": "bytes"
+            }
+          }
+        ]
+      },
+      "overwrite": true
+    }
