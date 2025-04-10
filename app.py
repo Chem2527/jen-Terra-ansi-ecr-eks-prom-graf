@@ -13,7 +13,7 @@ app.secret_key = 'your_secret_key'  # Required for flash messages
 
 # Configure PostgreSQL connection (ensure password is URL-encoded)
 app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv(
-    'DATABASE_URL', 'postgresql://sai:Sai%402024@13.50.248.202:5432/mydb1'
+    'DATABASE_URL', 'postgresql://sai:Sai%402024@16.16.128.22:5432/mydb1'
 )
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
