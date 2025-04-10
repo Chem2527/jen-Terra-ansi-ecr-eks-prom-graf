@@ -646,4 +646,22 @@ psql -U kavitha -d mydb1
 SELECT * FROM form_data
 ```
 
+## Topics covered
+```bash
+Deployment (deploy): Manages how many copies of your app should be running and makes updates without downtime.
+
+Service (svc): Exposes your app via a Load Balancer (LB), allowing stable access from outside the Kubernetes cluster.
+
+Pod: A single instance of your app running in a container within Kubernetes.
+
+Horizontal Pod Autoscaler (HPA): Automatically adds or removes pods based on CPU usage or other metrics to meet demand.
+
+Role: Defines what actions are allowed on Kubernetes resources like pods and services in a specific namespace.
+
+Role Binding: Assigns the permissions of a Role to a user or service account within a namespace.
+
+Readiness Probe: Checks if your pod is ready to handle requests (e.g., checks `/health` endpoint on port 5000).
+
+Liveness Probe: Monitors if your pod is still working; if it fails (e.g., `/health` fails), it restarts the pod to keep things running.
+```
 
