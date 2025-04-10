@@ -20,6 +20,7 @@ pipeline {
         DEPLOYMENT_YAML = 'k8s/deployment.yml'
         SERVICE_YAML = 'k8s/service.yaml'
         HPA_YAML = 'k8s/hpa.yaml'  // Add path to your HPA YAML file
+        METRICS_SERVER_RBAC_YAML = 'k8s/metrics-server-rbac.yaml'  // Path to your metrics-server-rbac.yaml file
     }
 
     stages {
@@ -91,10 +92,25 @@ pipeline {
                 withCredentials([file(credentialsId: 'KUBECONFIG', variable: 'KUBECONFIG_FILE')]) {
                     script {
                         echo "Checking if Metrics Server is installed..."
-                        // Install Metrics Server if not already installed
+                        // Check if the metrics-server deployment exists, and if not, install it
                         sh """
                             export KUBECONFIG=${WORKSPACE}/kubeconfig
                             kubectl get deployment metrics-server -n kube-system || kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml
+                        """
+                    }
+                }
+            }
+        }
+
+        stage('Apply Metrics Server RBAC') {
+            steps {
+                withCredentials([file(credentialsId: 'KUBECONFIG', variable: 'KUBECONFIG_FILE')]) {
+                    script {
+                        echo "Applying Metrics Server RBAC..."
+                        // Apply the metrics-server RBAC permissions
+                        sh """
+                            export KUBECONFIG=${WORKSPACE}/kubeconfig
+                            kubectl apply -f ${METRICS_SERVER_RBAC_YAML}
                         """
                     }
                 }
