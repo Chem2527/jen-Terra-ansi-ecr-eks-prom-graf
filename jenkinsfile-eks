@@ -6,17 +6,17 @@ pipeline {
         AWS_ACCOUNT_ID = credentials('AWS_ACCOUNT_ID')
         AWS_ACCESS_KEY_ID = credentials('aws_access_key_id')
         AWS_SECRET_ACCESS_KEY = credentials('aws_secret_access_key')
-        AWS_REGION = 'eu-north-1'  // Replace with your AWS region (could be a variable too)
+        AWS_REGION = 'eu-north-1'
 
         // ECR Repository Name and Kubernetes Config
-        ECR_REPO_NAME = credentials('ECR_REPO_NAME')  // Assuming you have the ECR repo name in Jenkins credentials
-        KUBECONFIG = credentials('KUBECONFIG')  // Assuming you have the kubeconfig saved in Jenkins credentials
+        ECR_REPO_NAME = credentials('ECR_REPO_NAME')
+        KUBECONFIG_FILE = credentials('KUBECONFIG') // Make sure KUBECONFIG is stored as a file in Jenkins
 
         // Git repository URL and branch
         GIT_REPO_URL = 'https://github.com/Chem2527/jen-Terra-ansi-ecr-eks-prom-graf.git'
         GIT_BRANCH = 'main'
 
-        // Kubernetes Manifests Paths (placeholders)
+        // Kubernetes Manifests Paths
         DEPLOYMENT_YAML = 'k8s/deployment.yml'
         SERVICE_YAML = 'k8s/service.yaml'
     }
@@ -25,7 +25,6 @@ pipeline {
         stage('Checkout SCM') {
             steps {
                 script {
-                    // Checkout the latest code from GitHub
                     git url: "${GIT_REPO_URL}", branch: "${GIT_BRANCH}", credentialsId: 'Git'
                 }
             }
@@ -34,7 +33,6 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 script {
-                    // Build Docker image using the Dockerfile in the repository
                     sh 'docker build -t flask-demo-app .'
                 }
             }
@@ -42,26 +40,16 @@ pipeline {
 
         stage('Push to ECR') {
             steps {
-                withCredentials([string(credentialsId: 'AWS_ACCOUNT_ID', variable: 'AWS_ACCOUNT_ID'),
-                                 string(credentialsId: 'ECR_REPO_NAME', variable: 'ECR_REPO_NAME'),
-                                 string(credentialsId: 'AWS_REGION', variable: 'AWS_REGION')]) {
+                withCredentials([
+                    string(credentialsId: 'AWS_ACCOUNT_ID', variable: 'AWS_ACCOUNT_ID'),
+                    string(credentialsId: 'ECR_REPO_NAME', variable: 'ECR_REPO_NAME'),
+                    string(credentialsId: 'AWS_REGION', variable: 'AWS_REGION')
+                ]) {
                     script {
-                        echo "Logging into ECR..."
-                        // Login to AWS ECR using AWS CLI
                         sh """
-                            aws ecr get-login-password --region "${AWS_REGION}" | docker login --username AWS --password-stdin "${AWS_ACCOUNT_ID}".dkr.ecr."${AWS_REGION}".amazonaws.com
-                        """
-
-                        echo "Tagging Docker image..."
-                        // Tag the Docker image for ECR
-                        sh """
-                            docker tag flask-demo-app:latest "${AWS_ACCOUNT_ID}".dkr.ecr."${AWS_REGION}".amazonaws.com/"${ECR_REPO_NAME}":latest
-                        """
-
-                        echo "Pushing Docker image to ECR..."
-                        // Push the Docker image to AWS ECR
-                        sh """
-                            docker push "${AWS_ACCOUNT_ID}".dkr.ecr."${AWS_REGION}".amazonaws.com/"${ECR_REPO_NAME}":latest
+                            aws ecr get-login-password --region "${AWS_REGION}" | docker login --username AWS --password-stdin "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com"
+                            docker tag flask-demo-app:latest "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPO_NAME}:latest"
+                            docker push "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPO_NAME}:latest"
                         """
                     }
                 }
@@ -70,14 +58,15 @@ pipeline {
 
         stage('Configure Kubernetes on EKS') {
             steps {
-                withCredentials([file(credentialsId: 'KUBECONFIG', variable: 'KUBECONFIG_FILE')]) {
+                withCredentials([file(credentialsId: 'KUBECONFIG', variable: 'KUBECONFIG_FILE_PATH')]) {
                     script {
                         echo "Configuring kubectl for EKS..."
                         // Set up kubectl to interact with EKS
-                        // Save the KUBECONFIG to a writable location in the Jenkins workspace
+                        // Use a writable path to save the kubeconfig from Jenkins credentials
                         sh """
                             export KUBECONFIG=${WORKSPACE}/kubeconfig
-                            cp ${KUBECONFIG_FILE} ${WORKSPACE}/kubeconfig
+                            cp ${KUBECONFIG_FILE_PATH} ${WORKSPACE}/kubeconfig
+                            chmod 600 ${WORKSPACE}/kubeconfig
                             aws eks update-kubeconfig --region ${AWS_REGION} --name example --kubeconfig ${WORKSPACE}/kubeconfig
                         """
                     }
@@ -87,17 +76,14 @@ pipeline {
 
         stage('Deploy to Kubernetes (EKS)') {
             steps {
-                withCredentials([file(credentialsId: 'KUBECONFIG', variable: 'KUBECONFIG_FILE')]) {
-                    script {
-                        echo "Applying Kubernetes manifests..."
-
-                        // Apply Kubernetes Deployment and Service YAML files to EKS
-                        sh """
-                            export KUBECONFIG=${WORKSPACE}/kubeconfig
-                            kubectl apply -f ${DEPLOYMENT_YAML}
-                            kubectl apply -f ${SERVICE_YAML}
-                        """
-                    }
+                script {
+                    echo "Applying Kubernetes manifests..."
+                    // Apply Kubernetes Deployment and Service YAML files to EKS
+                    sh """
+                        export KUBECONFIG=${WORKSPACE}/kubeconfig
+                        kubectl apply -f ${DEPLOYMENT_YAML}
+                        kubectl apply -f ${SERVICE_YAML}
+                    """
                 }
             }
         }
@@ -105,10 +91,10 @@ pipeline {
 
     post {
         success {
-            echo "CI/CD Pipeline successfully completed! The application is deployed on EKS."
+            echo "✅ CI/CD Pipeline completed successfully! App deployed to EKS."
         }
         failure {
-            echo "An error occurred during the CI/CD pipeline execution."
+            echo "❌ Pipeline failed. Check the logs for more details."
         }
     }
 }
