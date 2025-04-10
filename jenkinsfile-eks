@@ -7,15 +7,14 @@ pipeline {
         AWS_ACCESS_KEY_ID = credentials('aws_access_key_id')
         AWS_SECRET_ACCESS_KEY = credentials('aws_secret_access_key')
         AWS_REGION = 'eu-north-1'  // Replace with your AWS region (could be a variable too)
-        
+
         // ECR Repository Name and Kubernetes Config
         ECR_REPO_NAME = credentials('ECR_REPO_NAME')  // Assuming you have the ECR repo name in Jenkins credentials
-        KUBECONFIG = credentials('KUBECONFIG')  // Assuming you have the kubeconfig saved in Jenkins credentials
-        
+
         // Git repository URL and branch
         GIT_REPO_URL = 'https://github.com/Chem2527/jen-Terra-ansi-ecr-eks-prom-graf.git'
         GIT_BRANCH = 'main'
-        
+
         // Kubernetes Manifests Paths (placeholders)
         DEPLOYMENT_YAML = 'k8s/deployment.yml'
         SERVICE_YAML = 'k8s/service.yaml'
@@ -49,19 +48,19 @@ pipeline {
                         echo "Logging into ECR..."
                         // Login to AWS ECR using AWS CLI
                         sh """
-                            aws ecr get-login-password --region "${AWS_REGION}" | docker login --username AWS --password-stdin "${AWS_ACCOUNT_ID}".dkr.ecr."${AWS_REGION}".amazonaws.com
+                            aws ecr get-login-password --region "\${AWS_REGION}" | docker login --username AWS --password-stdin "\${AWS_ACCOUNT_ID}".dkr.ecr."\${AWS_REGION}".amazonaws.com
                         """
-                        
+
                         echo "Tagging Docker image..."
                         // Tag the Docker image for ECR
                         sh """
-                            docker tag flask-demo-app:latest "${AWS_ACCOUNT_ID}".dkr.ecr."${AWS_REGION}".amazonaws.com/"${ECR_REPO_NAME}":latest
+                            docker tag flask-demo-app:latest "\${AWS_ACCOUNT_ID}".dkr.ecr."\${AWS_REGION}".amazonaws.com/"\${ECR_REPO_NAME}":latest
                         """
 
                         echo "Pushing Docker image to ECR..."
                         // Push the Docker image to AWS ECR
                         sh """
-                            docker push "${AWS_ACCOUNT_ID}".dkr.ecr."${AWS_REGION}".amazonaws.com/"${ECR_REPO_NAME}":latest
+                            docker push "\${AWS_ACCOUNT_ID}".dkr.ecr."\${AWS_REGION}".amazonaws.com/"\${ECR_REPO_NAME}":latest
                         """
                     }
                 }
@@ -76,9 +75,11 @@ pipeline {
                         // Set up kubectl to interact with EKS
                         // Save the KUBECONFIG to a writable location in the Jenkins workspace
                         sh """
-                            export KUBECONFIG=${WORKSPACE}/kubeconfig
-                            cp ${KUBECONFIG_FILE} ${WORKSPACE}/kubeconfig
-                            aws eks update-kubeconfig --region ${AWS_REGION} --name example --kubeconfig ${WORKSPACE}/kubeconfig
+                            mkdir -p "\${WORKSPACE}/.kube"
+                            export KUBECONFIG=\${WORKSPACE}/.kube/config
+                            cp "\${KUBECONFIG_FILE}" "\${WORKSPACE}/.kube/config"
+                            chmod 600 "\${WORKSPACE}/.kube/config"
+                            aws eks update-kubeconfig --region "\${AWS_REGION}" --name example --kubeconfig \${WORKSPACE}/.kube/config
                         """
                     }
                 }
@@ -87,17 +88,15 @@ pipeline {
 
         stage('Deploy to Kubernetes (EKS)') {
             steps {
-                withCredentials([file(credentialsId: 'KUBECONFIG', variable: 'KUBECONFIG_FILE')]) {
-                    script {
-                        echo "Applying Kubernetes manifests..."
+                script {
+                    echo "Applying Kubernetes manifests..."
 
-                        // Apply Kubernetes Deployment and Service YAML files to EKS
-                        sh """
-                            export KUBECONFIG=${WORKSPACE}/kubeconfig
-                            kubectl apply -f ${DEPLOYMENT_YAML}
-                            kubectl apply -f ${SERVICE_YAML}
-                        """
-                    }
+                    // Apply Kubernetes Deployment and Service YAML files to EKS
+                    sh """
+                        export KUBECONFIG=\${WORKSPACE}/.kube/config
+                        kubectl apply -f \${DEPLOYMENT_YAML}
+                        kubectl apply -f \${SERVICE_YAML}
+                    """
                 }
             }
         }
