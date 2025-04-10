@@ -23,8 +23,8 @@ pipeline {
         METRICS_SERVER_RBAC_YAML = 'k8s/metrics-server-rbac.yaml'  // Path to your metrics-server-rbac.yaml file
         PROMETHEUS_YAML = 'k8s/prometheus.yaml'  // Path to Prometheus manifest
         GRAFANA_YAML = 'k8s/grafana.yaml'  // Path to Grafana manifest
-        PROMETHEUS_ALERTS_YAML = 'k8s/prometheus-alerts.yaml'  // Path to Prometheus alerting rules
-        GRAFANA_DASHBOARDS_YAML = 'k8s/grafana-dashboards.yaml'  // Path to Grafana dashboards
+        PROMETHEUS_ALERTS_YAML = 'k8s/prometheus-alerts.yaml'  // Updated path for Prometheus alerting rules
+        GRAFANA_DASHBOARDS_YAML = 'k8s/grafana-dashboards.yaml'  // Updated path for Grafana dashboards
     }
 
     stages {
