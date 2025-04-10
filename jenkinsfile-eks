@@ -56,19 +56,24 @@ pipeline {
         }
 
         stage('Configure Kubernetes on EKS') {
-            steps {
-                withCredentials([file(credentialsId: 'KUBECONFIG', variable: 'KUBECONFIG_FILE')]) {
-                    script {
-                        sh '''
-                            mkdir -p $WORKSPACE/.kube
-                            cp "$KUBECONFIG_FILE" "$WORKSPACE/.kube/config"
-                            export KUBECONFIG="$WORKSPACE/.kube/config"
-                            aws eks update-kubeconfig --region eu-north-1 --name example --kubeconfig "$WORKSPACE/.kube/config"
-                        '''
-                    }
-                }
+    steps {
+        withCredentials([file(credentialsId: 'KUBECONFIG', variable: 'KUBECONFIG_FILE')]) {
+            script {
+                echo "Configuring kubectl for EKS..."
+
+                // Use a safer path for kube config
+                def kubeDir = "${env.WORKSPACE}/kube"
+                sh """
+                    mkdir -p ${kubeDir}
+                    cp "${KUBECONFIG_FILE}" "${kubeDir}/config"
+                    export KUBECONFIG="${kubeDir}/config"
+                    aws eks update-kubeconfig --region ${AWS_REGION} --name example --kubeconfig "${kubeDir}/config"
+                """
             }
         }
+    }
+}
+
 
         stage('Install Metrics Server') {
             steps {
