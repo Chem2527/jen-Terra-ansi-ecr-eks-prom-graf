@@ -21,10 +21,6 @@ pipeline {
         SERVICE_YAML = 'k8s/service.yaml'
         HPA_YAML = 'k8s/hpa.yaml'  // Add path to your HPA YAML file
         METRICS_SERVER_RBAC_YAML = 'k8s/metrics-server-rbac.yaml'  // Path to your metrics-server-rbac.yaml file
-        PROMETHEUS_YAML = 'k8s/prometheus.yaml'  // Path to Prometheus manifest
-        GRAFANA_YAML = 'k8s/grafana.yaml'  // Path to Grafana manifest
-        PROMETHEUS_ALERTS_YAML = 'k8s/prometheus-alerts.yaml'  // Updated path for Prometheus alerting rules
-        GRAFANA_DASHBOARDS_YAML = 'k8s/grafana-dashboards.yaml'  // Updated path for Grafana dashboards
     }
 
     stages {
@@ -91,21 +87,6 @@ pipeline {
             }
         }
 
-        stage('Create Monitoring Namespace') {
-            steps {
-                withCredentials([file(credentialsId: 'KUBECONFIG', variable: 'KUBECONFIG_FILE')]) {
-                    script {
-                        echo "Creating monitoring namespace..."
-                        // Create the monitoring namespace if it doesn't exist
-                        sh """
-                            export KUBECONFIG=${WORKSPACE}/kubeconfig
-                            kubectl create namespace monitoring || echo "Namespace 'monitoring' already exists"
-                        """
-                    }
-                }
-            }
-        }
-
         stage('Install Metrics Server (if not installed)') {
             steps {
                 withCredentials([file(credentialsId: 'KUBECONFIG', variable: 'KUBECONFIG_FILE')]) {
@@ -136,71 +117,12 @@ pipeline {
             }
         }
 
-        stage('Deploy Prometheus') {
-            steps {
-                withCredentials([file(credentialsId: 'KUBECONFIG', variable: 'KUBECONFIG_FILE')]) {
-                    script {
-                        echo "Deploying Prometheus..."
-                        // Apply Prometheus manifest to deploy it in the monitoring namespace
-                        sh """
-                            export KUBECONFIG=${WORKSPACE}/kubeconfig
-                            kubectl apply -f ${PROMETHEUS_YAML} -n monitoring
-                        """
-                    }
-                }
-            }
-        }
-
-        stage('Deploy Grafana') {
-            steps {
-                withCredentials([file(credentialsId: 'KUBECONFIG', variable: 'KUBECONFIG_FILE')]) {
-                    script {
-                        echo "Deploying Grafana..."
-                        // Apply Grafana manifest to deploy it in the monitoring namespace
-                        sh """
-                            export KUBECONFIG=${WORKSPACE}/kubeconfig
-                            kubectl apply -f ${GRAFANA_YAML} -n monitoring
-                        """
-                    }
-                }
-            }
-        }
-
-        stage('Apply Prometheus Alerts') {
-            steps {
-                withCredentials([file(credentialsId: 'KUBECONFIG', variable: 'KUBECONFIG_FILE')]) {
-                    script {
-                        echo "Applying Prometheus alerting rules..."
-                        // Apply Prometheus alerting rules
-                        sh """
-                            export KUBECONFIG=${WORKSPACE}/kubeconfig
-                            kubectl apply -f ${PROMETHEUS_ALERTS_YAML} -n monitoring
-                        """
-                    }
-                }
-            }
-        }
-
-        stage('Apply Grafana Dashboards') {
-            steps {
-                withCredentials([file(credentialsId: 'KUBECONFIG', variable: 'KUBECONFIG_FILE')]) {
-                    script {
-                        echo "Applying Grafana dashboards..."
-                        // Apply Grafana dashboard config
-                        sh """
-                            export KUBECONFIG=${WORKSPACE}/kubeconfig
-                            kubectl apply -f ${GRAFANA_DASHBOARDS_YAML} -n monitoring
-                        """
-                    }
-                }
-            }
-        }
-
         stage('Deploy to Kubernetes (EKS)') {
             steps {
                 withCredentials([file(credentialsId: 'KUBECONFIG', variable: 'KUBECONFIG_FILE')]) {
                     script {
                         echo "Applying Kubernetes manifests..."
+                        
                         // Apply Kubernetes Deployment and Service YAML files to EKS
                         sh """
                             export KUBECONFIG=${WORKSPACE}/kubeconfig
@@ -217,6 +139,7 @@ pipeline {
                 withCredentials([file(credentialsId: 'KUBECONFIG', variable: 'KUBECONFIG_FILE')]) {
                     script {
                         echo "Applying Horizontal Pod Autoscaler (HPA)..."
+                        
                         // Apply HPA YAML to scale pods based on CPU utilization
                         sh """
                             export KUBECONFIG=${WORKSPACE}/kubeconfig
@@ -230,7 +153,7 @@ pipeline {
 
     post {
         success {
-            echo "CI/CD Pipeline successfully completed! The application is deployed on EKS, Prometheus and Grafana are set up for monitoring, and auto-scaling is configured."
+            echo "CI/CD Pipeline successfully completed! The application is deployed on EKS and auto-scaling is configured."
         }
         failure {
             echo "An error occurred during the CI/CD pipeline execution."
