@@ -79,14 +79,5 @@ def submissions():
     data = FormData.query.all()
     return render_template('submissions.html', data=data)
 
-@app.route('/health')
-def health_check():
-    try:
-        # A simple health check that ensures the app is running
-        return 'Healthy', 200
-    except Exception as e:
-        logging.error(f"Health check failed - {e}")
-        return 'Unhealthy', 500
-
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)  # Listen on all network interfaces
