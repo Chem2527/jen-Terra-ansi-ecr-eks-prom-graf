@@ -68,23 +68,24 @@ pipeline {
         }
 
         stage('Configure Kubernetes on EKS') {
-            steps {
-                withCredentials([file(credentialsId: 'KUBECONFIG', variable: 'KUBECONFIG_FILE')]) {
-                    script {
-                        echo "Configuring kubectl for EKS..."
-                        // Set up kubectl to interact with EKS
-                        // Save the KUBECONFIG to a writable location in the Jenkins workspace
-                        sh """
-                            mkdir -p "\${WORKSPACE}/.kube"
-                            export KUBECONFIG=\${WORKSPACE}/.kube/config
-                            cp "\${KUBECONFIG_FILE}" "\${WORKSPACE}/.kube/config"
-                            chmod 600 "\${WORKSPACE}/.kube/config"
-                            aws eks update-kubeconfig --region "\${AWS_REGION}" --name example --kubeconfig \${WORKSPACE}/.kube/config
-                        """
-                    }
-                }
+    steps {
+        withCredentials([file(credentialsId: 'KUBECONFIG', variable: 'KUBECONFIG_FILE')]) {
+            script {
+                echo "Configuring kubectl for EKS..."
+                // Set up kubectl to interact with EKS
+                // Save the KUBECONFIG to a writable location in the Jenkins workspace
+                sh """
+                    export KUBECONFIG=/tmp/kubeconfig
+                    cp "\${KUBECONFIG_FILE}" /tmp/kubeconfig
+                    chmod 600 /tmp/kubeconfig
+                    sudo chown jenkins:jenkins /tmp/kubeconfig
+                    aws eks update-kubeconfig --region "${AWS_REGION}" --name example --kubeconfig /tmp/kubeconfig
+                """
             }
         }
+    }
+}
+
 
         stage('Deploy to Kubernetes (EKS)') {
             steps {
