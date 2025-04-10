@@ -31,6 +31,11 @@ class FormData(db.Model):
 with app.app_context():
     db.create_all()
 
+@app.route('/health')
+def health():
+    """Health check route for liveness/readiness probes."""
+    return 'OK', 200  # Respond with 200 status to indicate the app is healthy
+
 @app.route('/')
 def index():
     return render_template('form.html')
