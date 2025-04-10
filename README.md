@@ -634,5 +634,16 @@ my-app-hpa   Deployment/my-app   cpu: <unknown>/80%   2         10        3     
 <img width="512" alt="image" src="https://github.com/user-attachments/assets/e44a0a39-65a9-4d37-93d0-64b6b4751c35" />
 
 
+## Access the application through EKS svc
+
+<img width="745" alt="image" src="https://github.com/user-attachments/assets/6b3f97c3-adc6-4421-a06a-d0ec9801da30" />
+
+
+paste the external ip in browser and provide the  details in the form and submit the form and also confirm whether the db is storing the data or not by logging to db
+ ```bash
+sudo -i -u postgres
+psql -U kavitha -d mydb1
+SELECT * FROM form_data
+```
 
 
