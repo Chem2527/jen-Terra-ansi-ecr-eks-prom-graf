@@ -3,14 +3,10 @@ pipeline {
 
     environment {
         // AWS Credentials and Region Setup
-        AWS_ACCOUNT_ID = credentials('AWS_ACCOUNT_ID')
-        AWS_ACCESS_KEY_ID = credentials('aws_access_key_id')
-        AWS_SECRET_ACCESS_KEY = credentials('aws_secret_access_key')
         AWS_REGION = 'eu-north-1'
 
         // ECR Repository Name and Kubernetes Config
-        ECR_REPO_NAME = credentials('ECR_REPO_NAME')
-        KUBECONFIG_PATH = "${WORKSPACE}/.kube/config" // Custom kubeconfig path
+        KUBECONFIG_PATH = "${WORKSPACE}/.kube/config"
 
         // Git repository URL and branch
         GIT_REPO_URL = 'https://github.com/Chem2527/jen-Terra-ansi-ecr-eks-prom-graf.git'
@@ -25,9 +21,15 @@ pipeline {
     stages {
         stage('Checkout SCM') {
             steps {
-                script {
-                    git url: "${GIT_REPO_URL}", branch: "${GIT_BRANCH}", credentialsId: 'Git'
-                }
+                checkout([
+                    $class: 'GitSCM',
+                    branches: [[name: env.GIT_BRANCH]],
+                    extensions: [],
+                    userRemoteConfigs: [[
+                        url: env.GIT_REPO_URL,
+                        credentialsId: 'Git'
+                    ]]
+                ])
             }
         }
 
@@ -44,14 +46,19 @@ pipeline {
                 withCredentials([
                     string(credentialsId: 'AWS_ACCOUNT_ID', variable: 'AWS_ACCOUNT_ID'),
                     string(credentialsId: 'ECR_REPO_NAME', variable: 'ECR_REPO_NAME'),
-                    string(credentialsId: 'AWS_REGION', variable: 'AWS_REGION')
+                    usernamePassword(
+                        credentialsId: 'aws_credentials',
+                        usernameVariable: 'AWS_ACCESS_KEY_ID',
+                        passwordVariable: 'AWS_SECRET_ACCESS_KEY'
+                    )
                 ]) {
                     script {
-                        sh """
-                            aws ecr get-login-password --region "${AWS_REGION}" | docker login --username AWS --password-stdin "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com"
+                        sh '''#!/bin/bash
+                            aws ecr get-login-password --region "${AWS_REGION}" | \
+                            docker login --username AWS --password-stdin "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com"
                             docker tag flask-demo-app:latest "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPO_NAME}:latest"
                             docker push "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPO_NAME}:latest"
-                        """
+                        '''
                     }
                 }
             }
@@ -62,15 +69,16 @@ pipeline {
                 withCredentials([file(credentialsId: 'KUBECONFIG', variable: 'KUBECONFIG_FILE')]) {
                     script {
                         echo "⚙️ Configuring kubectl for EKS..."
-                        def kubeconfigDir = "${env.WORKSPACE}/.kube"
-                        def kubeconfigPath = "${kubeconfigDir}/config"
-
-                        sh """
-                            mkdir -p ${kubeconfigDir}
-                            cp ${KUBECONFIG_FILE} ${kubeconfigPath}
-                            chmod 600 ${kubeconfigPath}
-                            export KUBECONFIG=${kubeconfigPath}
-                            aws eks update-kubeconfig --region ${AWS_REGION} --name example --kubeconfig ${kubeconfigPath}
+                        def kubeDir = "${env.WORKSPACE}/.kube"
+                        
+                        sh """#!/bin/bash
+                            mkdir -p "${kubeDir}"
+                            cp "${KUBECONFIG_FILE}" "${kubeDir}/config"
+                            chmod 600 "${kubeDir}/config"
+                            aws eks update-kubeconfig \
+                                --region ${AWS_REGION} \
+                                --name example \
+                                --kubeconfig "${kubeDir}/config"
                         """
                     }
                 }
@@ -80,10 +88,10 @@ pipeline {
         stage('Install Metrics Server') {
             steps {
                 script {
-                    echo "📦 Installing Metrics Server..."
+                    echo " Installing Metrics Server..."
                     sh """
-                        export KUBECONFIG=${KUBECONFIG_PATH}
-                        kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml
+                        kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml \
+                          --kubeconfig="${KUBECONFIG_PATH}"
                     """
                 }
             }
@@ -92,23 +100,21 @@ pipeline {
         stage('Deploy to Kubernetes (EKS)') {
             steps {
                 script {
-                    echo "🚀 Deploying application to EKS..."
+                    echo " Deploying application to EKS..."
                     sh """
-                        export KUBECONFIG=${KUBECONFIG_PATH}
-                        kubectl apply -f ${DEPLOYMENT_YAML}
-                        kubectl apply -f ${SERVICE_YAML}
+                        kubectl apply -f ${DEPLOYMENT_YAML} --kubeconfig="${KUBECONFIG_PATH}"
+                        kubectl apply -f ${SERVICE_YAML} --kubeconfig="${KUBECONFIG_PATH}"
                     """
                 }
             }
         }
 
-        stage('Apply Horizontal Pod Autoscaler (HPA)') {
+        stage('Apply HPA') {
             steps {
                 script {
-                    echo "📈 Applying Horizontal Pod Autoscaler..."
+                    echo " Applying Horizontal Pod Autoscaler..."
                     sh """
-                        export KUBECONFIG=${KUBECONFIG_PATH}
-                        kubectl apply -f ${HPA_YAML}
+                        kubectl apply -f ${HPA_YAML} --kubeconfig="${KUBECONFIG_PATH}"
                     """
                 }
             }
@@ -117,10 +123,10 @@ pipeline {
 
     post {
         success {
-            echo "✅ CI/CD Pipeline completed successfully! App deployed to EKS with HPA."
+            echo " CI/CD Pipeline completed successfully! App deployed to EKS with HPA."
         }
         failure {
-            echo "❌ Pipeline failed. Check the logs for more details."
+            echo " Pipeline failed. Check the logs for more details."
         }
     }
 }
