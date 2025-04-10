@@ -817,6 +817,20 @@ Your Kubernetes cluster is now fully monitored with Prometheus and Grafana.
 <img width="938" alt="image" src="https://github.com/user-attachments/assets/b5663b48-0b2d-413e-9f31-171119bf031b" />
 <img width="952" alt="image" src="https://github.com/user-attachments/assets/28115c63-9eda-4a65-be7f-05e7f425d112" />
 
+## sending notifications to Slack
+
+```bash
+navigate to workspace in slack --> manage apps ---> on the market place search **jenkins CI**  and click on add
+
+install the **slack notification plugin** in jenkins under avaiable plugins.
+
+navigate to manage jenkins --> configure system
+
+provide the workspace name exactly which was under step 3 of jenkins CI
+
+create a secret text credential under jenkins credentials and check the connection.
+```
+
 
 
 
