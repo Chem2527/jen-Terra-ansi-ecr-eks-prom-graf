@@ -671,3 +671,147 @@ Liveness Probe: Monitors if your pod is still working; if it fails (e.g., `/heal
 ```
 
 
+## Eks Monitoring Setup using Prometheus & Grafana (via Helm)
+
+Prerequisites
+A running Kubernetes cluster.
+
+kubectl configured and authenticated to your cluster. ##(aws eks --region <region> update-kubeconfig --name <cluster name>)
+
+Administrator access to your local Windows machine.
+
+1. Install Chocolatey (Windows Only)
+If you don’t have Chocolatey installed, run the following in PowerShell (Run as Administrator):
+
+```bash
+Set-ExecutionPolicy Bypass -Scope Process -Force; `
+[System.Net.ServicePointManager]::SecurityProtocol = `
+    [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; `
+iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
+```
+
+After installation, restart your terminal and verify Chocolatey installation:
+
+```bash
+choco --version
+```
+
+2. Install Helm using Chocolatey
+
+```bash
+choco install kubernetes-helm -y
+```
+
+Verify the installation:
+
+```bash
+helm version
+```
+3. Add Required Helm Repositories
+
+```bash
+helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+```
+```bash
+helm repo add grafana https://grafana.github.io/helm-charts
+```
+```bash
+helm repo update
+```
+4. Create Monitoring Namespace
+```bash
+kubectl create namespace monitoring
+```
+5. Install Prometheus Stack
+
+Install the full Kube Prometheus Stack using Helm:
+
+```bash
+helm install prometheus prometheus-community/kube-prometheus-stack --namespace monitoring
+```
+6. Install Grafana 
+
+Install Grafana separately if not using the bundled one from the Prometheus stack:
+
+```bash
+helm install grafana grafana/grafana --namespace monitoring
+```
+7. Retrieve Grafana Admin Password
+
+```bash
+
+kubectl get secret --namespace monitoring grafana -o jsonpath="{.data.admin-password}" | base64 --decode ; echo
+```
+
+
+8. Expose Grafana Using LoadBalancer
+Edit the Grafana service:
+
+```bash
+kubectl edit svc grafana -n monitoring
+```
+Change the type field in the service spec from:
+
+```bash
+type: ClusterIP
+To:
+
+
+type: LoadBalancer
+```
+Then save and close the editor.
+
+9. Get Grafana External IP
+
+```bash
+kubectl get svc -n monitoring
+```
+Look for the grafana service and copy its EXTERNAL-IP. Use this IP to access Grafana from your browser.
+
+10. Login to Grafana
+Open the Grafana URL in your browser.
+
+Username: admin
+
+Password: *******
+
+11. Add Prometheus as a Data Source
+
+```bash
+
+In Grafana, go to Settings > Data Sources.
+
+Click on Add data source.
+
+Select Prometheus.
+
+Enter the following URL:
+
+
+http://prometheus-operated.monitoring.svc:9090
+```
+Click Save & Test to verify connectivity.
+
+12. Import Pre-built Kubernetes Dashboards
+
+```bash
+In Grafana, click + (Create) → Import.
+
+Enter the dashboard ID 315.
+
+Click Load.
+
+Confirm and click Import.
+
+Your Kubernetes cluster is now fully monitored with Prometheus and Grafana.
+```
+<img width="956" alt="image" src="https://github.com/user-attachments/assets/ee0d6f2d-bb80-407d-9eb8-3a3da8808377" />
+<img width="959" alt="image" src="https://github.com/user-attachments/assets/907393fc-9e1f-46bd-9a23-9b026a4f9de3" />
+<img width="947" alt="image" src="https://github.com/user-attachments/assets/d392c7c0-ca64-4872-a3ab-44f5ae481a1f" />
+<img width="947" alt="image" src="https://github.com/user-attachments/assets/c7755c62-706c-4919-888e-c6fe63a6ca2b" />
+<img width="938" alt="image" src="https://github.com/user-attachments/assets/b5663b48-0b2d-413e-9f31-171119bf031b" />
+<img width="952" alt="image" src="https://github.com/user-attachments/assets/28115c63-9eda-4a65-be7f-05e7f425d112" />
+
+
+
+
