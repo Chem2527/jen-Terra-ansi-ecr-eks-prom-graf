@@ -1,0 +1,35 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: flask-app-alerts
+  namespace: monitoring  # Namespace where Prometheus is installed
+spec:
+  groups:
+  - name: flask-app.rules
+    rules:
+    - alert: HighCPUUsage
+      expr: avg(rate(container_cpu_usage_seconds_total{pod=~"flask-demo-app.*"}[5m])) by (pod) > 0.8
+      for: 5m
+      labels:
+        severity: critical
+      annotations:
+        summary: "CPU usage for pod {{ $labels.pod }} is high."
+        description: "The CPU usage for pod {{ $labels.pod }} has been above 80% for 5 minutes."
+        
+    - alert: HighMemoryUsage
+      expr: avg(container_memory_usage_bytes{pod=~"flask-demo-app.*"}) by (pod) > 1000000000  # 1 GB
+      for: 5m
+      labels:
+        severity: critical
+      annotations:
+        summary: "Memory usage for pod {{ $labels.pod }} is high."
+        description: "The memory usage for pod {{ $labels.pod }} has been above 1 GB for 5 minutes."
+        
+    - alert: PodDown
+      expr: up{pod=~"flask-demo-app.*"} == 0
+      for: 5m
+      labels:
+        severity: critical
+      annotations:
+        summary: "Pod {{ $labels.pod }} is down."
+        description: "Pod {{ $labels.pod }} has been down for more than 5 minutes."
