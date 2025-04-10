@@ -6,11 +6,11 @@ pipeline {
         AWS_ACCOUNT_ID = credentials('AWS_ACCOUNT_ID')
         AWS_ACCESS_KEY_ID = credentials('aws_access_key_id')
         AWS_SECRET_ACCESS_KEY = credentials('aws_secret_access_key')
-        AWS_REGION = 'eu-north-1'
+        AWS_REGION = 'eu-north-1'  // Replace with your AWS region
 
         // ECR Repository Name and Kubernetes Config
         ECR_REPO_NAME = credentials('ECR_REPO_NAME')
-        KUBECONFIG_FILE = credentials('KUBECONFIG') // Make sure KUBECONFIG is stored as a file in Jenkins
+        KUBECONFIG_FILE = credentials('KUBECONFIG')  // Jenkins stored kubeconfig file
 
         // Git repository URL and branch
         GIT_REPO_URL = 'https://github.com/Chem2527/jen-Terra-ansi-ecr-eks-prom-graf.git'
@@ -67,7 +67,6 @@ pipeline {
                             export KUBECONFIG=${WORKSPACE}/kubeconfig
                             cp ${KUBECONFIG_FILE_PATH} ${WORKSPACE}/kubeconfig
                             chmod 600 ${WORKSPACE}/kubeconfig
-                            aws eks update-kubeconfig --region ${AWS_REGION} --name example --kubeconfig ${WORKSPACE}/kubeconfig
                         """
                     }
                 }
