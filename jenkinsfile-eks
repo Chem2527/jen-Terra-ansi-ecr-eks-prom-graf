@@ -19,6 +19,7 @@ pipeline {
         // Kubernetes Manifests Paths (placeholders)
         DEPLOYMENT_YAML = 'k8s/deployment.yml'
         SERVICE_YAML = 'k8s/service.yaml'
+        HPA_YAML = 'k8s/hpa.yaml'  // Add path to your HPA YAML file
     }
 
     stages {
@@ -90,7 +91,7 @@ pipeline {
                 withCredentials([file(credentialsId: 'KUBECONFIG', variable: 'KUBECONFIG_FILE')]) {
                     script {
                         echo "Applying Kubernetes manifests..."
-
+                        
                         // Apply Kubernetes Deployment and Service YAML files to EKS
                         sh """
                             export KUBECONFIG=${WORKSPACE}/kubeconfig
@@ -101,11 +102,27 @@ pipeline {
                 }
             }
         }
+
+        stage('Configure Horizontal Pod Autoscaler (HPA)') {
+            steps {
+                withCredentials([file(credentialsId: 'KUBECONFIG', variable: 'KUBECONFIG_FILE')]) {
+                    script {
+                        echo "Applying Horizontal Pod Autoscaler (HPA)..."
+                        
+                        // Apply HPA YAML to scale pods based on CPU utilization
+                        sh """
+                            export KUBECONFIG=${WORKSPACE}/kubeconfig
+                            kubectl apply -f ${HPA_YAML}
+                        """
+                    }
+                }
+            }
+        }
     }
 
     post {
         success {
-            echo "CI/CD Pipeline successfully completed! The application is deployed on EKS."
+            echo "CI/CD Pipeline successfully completed! The application is deployed on EKS and auto-scaling is configured."
         }
         failure {
             echo "An error occurred during the CI/CD pipeline execution."
