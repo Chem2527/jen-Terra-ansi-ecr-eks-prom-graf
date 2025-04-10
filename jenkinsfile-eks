@@ -6,27 +6,26 @@ pipeline {
         AWS_ACCOUNT_ID = credentials('AWS_ACCOUNT_ID')
         AWS_ACCESS_KEY_ID = credentials('aws_access_key_id')
         AWS_SECRET_ACCESS_KEY = credentials('aws_secret_access_key')
-        AWS_REGION = 'eu-north-1'  // Replace with your AWS region (could be a variable too)
-        
+        AWS_REGION = 'eu-north-1'
+
         // ECR Repository Name and Kubernetes Config
-        ECR_REPO_NAME = credentials('ECR_REPO_NAME')  // Assuming you have the ECR repo name in Jenkins credentials
-        KUBECONFIG = credentials('KUBECONFIG')  // Assuming you have the kubeconfig saved in Jenkins credentials
-        
+        ECR_REPO_NAME = credentials('ECR_REPO_NAME')
+        KUBECONFIG = credentials('KUBECONFIG')
+
         // Git repository URL and branch
         GIT_REPO_URL = 'https://github.com/Chem2527/jen-Terra-ansi-ecr-eks-prom-graf.git'
         GIT_BRANCH = 'main'
-        
-        // Kubernetes Manifests Paths (placeholders)
+
+        // Kubernetes Manifests Paths
         DEPLOYMENT_YAML = 'k8s/deployment.yml'
         SERVICE_YAML = 'k8s/service.yaml'
-        HPA_YAML = 'k8s/hpa.yaml'  // New: Horizontal Pod Autoscaler YAML file path
+        HPA_YAML = 'k8s/hpa.yaml'
     }
 
     stages {
         stage('Checkout SCM') {
             steps {
                 script {
-                    // Checkout the latest code from GitHub
                     git url: "${GIT_REPO_URL}", branch: "${GIT_BRANCH}", credentialsId: 'Git'
                 }
             }
@@ -35,7 +34,6 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 script {
-                    // Build Docker image using the Dockerfile in the repository
                     sh 'docker build -t flask-demo-app .'
                 }
             }
@@ -47,52 +45,36 @@ pipeline {
                                  string(credentialsId: 'ECR_REPO_NAME', variable: 'ECR_REPO_NAME'),
                                  string(credentialsId: 'AWS_REGION', variable: 'AWS_REGION')]) {
                     script {
-                        echo "Logging into ECR..."
-                        // Login to AWS ECR using AWS CLI
                         sh """
-                            aws ecr get-login-password --region "${AWS_REGION}" | docker login --username AWS --password-stdin "${AWS_ACCOUNT_ID}".dkr.ecr."${AWS_REGION}".amazonaws.com
-                        """
-                        
-                        echo "Tagging Docker image..."
-                        // Tag the Docker image for ECR
-                        sh """
-                            docker tag flask-demo-app:latest "${AWS_ACCOUNT_ID}".dkr.ecr."${AWS_REGION}".amazonaws.com/"${ECR_REPO_NAME}":latest
-                        """
-
-                        echo "Pushing Docker image to ECR..."
-                        // Push the Docker image to AWS ECR
-                        sh """
-                            docker push "${AWS_ACCOUNT_ID}".dkr.ecr."${AWS_REGION}".amazonaws.com/"${ECR_REPO_NAME}":latest
+                            aws ecr get-login-password --region "${AWS_REGION}" | docker login --username AWS --password-stdin "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com"
+                            docker tag flask-demo-app:latest "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPO_NAME}:latest"
+                            docker push "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPO_NAME}:latest"
                         """
                     }
                 }
             }
         }
 
-stage('Configure Kubernetes on EKS') {
+        stage('Configure Kubernetes on EKS') {
             steps {
                 withCredentials([file(credentialsId: 'KUBECONFIG', variable: 'KUBECONFIG_FILE')]) {
                     script {
-                        echo "Configuring kubectl for EKS..."
-                        // Set up kubectl to interact with EKS
-                        // Save the KUBECONFIG to a writable location in the Jenkins workspace
-                        sh """
-                            export KUBECONFIG=${WORKSPACE}/kubeconfig
-                            cp ${KUBECONFIG_FILE} ${WORKSPACE}/kubeconfig
-                            aws eks update-kubeconfig --region ${AWS_REGION} --name example --kubeconfig ${WORKSPACE}/kubeconfig
-                        """
+                        sh '''
+                            mkdir -p $WORKSPACE/.kube
+                            cp "$KUBECONFIG_FILE" "$WORKSPACE/.kube/config"
+                            export KUBECONFIG="$WORKSPACE/.kube/config"
+                            aws eks update-kubeconfig --region eu-north-1 --name example --kubeconfig "$WORKSPACE/.kube/config"
+                        '''
                     }
                 }
             }
         }
-
 
         stage('Install Metrics Server') {
             steps {
                 script {
-                    echo "Installing Metrics Server in EKS..."
-                    // Install Metrics Server (needed for Horizontal Pod Autoscaler)
                     sh """
+                        export KUBECONFIG=${WORKSPACE}/.kube/config
                         kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml
                     """
                 }
@@ -101,17 +83,12 @@ stage('Configure Kubernetes on EKS') {
 
         stage('Deploy to Kubernetes (EKS)') {
             steps {
-                withCredentials([file(credentialsId: 'KUBECONFIG', variable: 'KUBECONFIG_FILE')]) {
-                    script {
-                        echo "Applying Kubernetes manifests..."
-                        
-                        // Apply Kubernetes Deployment and Service YAML files to EKS
-                        sh """
-                            export KUBECONFIG=${WORKSPACE}/kubeconfig
-                            kubectl apply -f ${DEPLOYMENT_YAML}
-                            kubectl apply -f ${SERVICE_YAML}
-                        """
-                    }
+                script {
+                    sh """
+                        export KUBECONFIG=${WORKSPACE}/.kube/config
+                        kubectl apply -f ${DEPLOYMENT_YAML}
+                        kubectl apply -f ${SERVICE_YAML}
+                    """
                 }
             }
         }
@@ -119,10 +96,8 @@ stage('Configure Kubernetes on EKS') {
         stage('Apply Horizontal Pod Autoscaler (HPA)') {
             steps {
                 script {
-                    echo "Applying Horizontal Pod Autoscaler (HPA)..."
-                    // Apply Horizontal Pod Autoscaler (HPA) YAML file to EKS
                     sh """
-                        export KUBECONFIG=${WORKSPACE}/kubeconfig
+                        export KUBECONFIG=${WORKSPACE}/.kube/config
                         kubectl apply -f ${HPA_YAML}
                     """
                 }
@@ -132,10 +107,10 @@ stage('Configure Kubernetes on EKS') {
 
     post {
         success {
-            echo "CI/CD Pipeline successfully completed! The application is deployed on EKS and HPA is applied."
+            echo "✅ CI/CD Pipeline completed successfully! App deployed to EKS with HPA."
         }
         failure {
-            echo "An error occurred during the CI/CD pipeline execution."
+            echo "❌ Pipeline failed. Check the logs for more details."
         }
     }
 }
