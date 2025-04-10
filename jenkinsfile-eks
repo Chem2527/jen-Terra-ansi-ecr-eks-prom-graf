@@ -10,7 +10,7 @@ pipeline {
 
         // ECR Repository Name and Kubernetes Config
         ECR_REPO_NAME = credentials('ECR_REPO_NAME')
-        KUBECONFIG = credentials('KUBECONFIG')
+        KUBECONFIG_PATH = "${WORKSPACE}/.kube/config" // Custom kubeconfig path
 
         // Git repository URL and branch
         GIT_REPO_URL = 'https://github.com/Chem2527/jen-Terra-ansi-ecr-eks-prom-graf.git'
@@ -41,9 +41,11 @@ pipeline {
 
         stage('Push to ECR') {
             steps {
-                withCredentials([string(credentialsId: 'AWS_ACCOUNT_ID', variable: 'AWS_ACCOUNT_ID'),
-                                 string(credentialsId: 'ECR_REPO_NAME', variable: 'ECR_REPO_NAME'),
-                                 string(credentialsId: 'AWS_REGION', variable: 'AWS_REGION')]) {
+                withCredentials([
+                    string(credentialsId: 'AWS_ACCOUNT_ID', variable: 'AWS_ACCOUNT_ID'),
+                    string(credentialsId: 'ECR_REPO_NAME', variable: 'ECR_REPO_NAME'),
+                    string(credentialsId: 'AWS_REGION', variable: 'AWS_REGION')
+                ]) {
                     script {
                         sh """
                             aws ecr get-login-password --region "${AWS_REGION}" | docker login --username AWS --password-stdin "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com"
@@ -56,32 +58,31 @@ pipeline {
         }
 
         stage('Configure Kubernetes on EKS') {
-    steps {
-        withCredentials([file(credentialsId: 'KUBECONFIG', variable: 'KUBECONFIG_FILE')]) {
-            script {
-                echo "Configuring kubectl for EKS..."
+            steps {
+                withCredentials([file(credentialsId: 'KUBECONFIG', variable: 'KUBECONFIG_FILE')]) {
+                    script {
+                        echo "⚙️ Configuring kubectl for EKS..."
+                        def kubeconfigDir = "${env.WORKSPACE}/.kube"
+                        def kubeconfigPath = "${kubeconfigDir}/config"
 
-                def kubeDir = "${env.WORKSPACE}/kube"
-                sh """
-                    mkdir -p ${kubeDir}
-                    cp ${KUBECONFIG_FILE} ${kubeDir}/original-config
-                    cp ${kubeDir}/original-config ${kubeDir}/config
-                    chmod 600 ${kubeDir}/config
-                    export KUBECONFIG=${kubeDir}/config
-                    aws eks update-kubeconfig --region ${AWS_REGION} --name example --kubeconfig ${kubeDir}/config
-                """
+                        sh """
+                            mkdir -p ${kubeconfigDir}
+                            cp ${KUBECONFIG_FILE} ${kubeconfigPath}
+                            chmod 600 ${kubeconfigPath}
+                            export KUBECONFIG=${kubeconfigPath}
+                            aws eks update-kubeconfig --region ${AWS_REGION} --name example --kubeconfig ${kubeconfigPath}
+                        """
+                    }
+                }
             }
         }
-    }
-}
-
-
 
         stage('Install Metrics Server') {
             steps {
                 script {
+                    echo "📦 Installing Metrics Server..."
                     sh """
-                        export KUBECONFIG=${WORKSPACE}/.kube/config
+                        export KUBECONFIG=${KUBECONFIG_PATH}
                         kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml
                     """
                 }
@@ -91,8 +92,9 @@ pipeline {
         stage('Deploy to Kubernetes (EKS)') {
             steps {
                 script {
+                    echo "🚀 Deploying application to EKS..."
                     sh """
-                        export KUBECONFIG=${WORKSPACE}/.kube/config
+                        export KUBECONFIG=${KUBECONFIG_PATH}
                         kubectl apply -f ${DEPLOYMENT_YAML}
                         kubectl apply -f ${SERVICE_YAML}
                     """
@@ -103,8 +105,9 @@ pipeline {
         stage('Apply Horizontal Pod Autoscaler (HPA)') {
             steps {
                 script {
+                    echo "📈 Applying Horizontal Pod Autoscaler..."
                     sh """
-                        export KUBECONFIG=${WORKSPACE}/.kube/config
+                        export KUBECONFIG=${KUBECONFIG_PATH}
                         kubectl apply -f ${HPA_YAML}
                     """
                 }
