@@ -618,6 +618,7 @@ This command grants write permissions to the user (u) for the /var/lib/jenkins/w
 ## eks commands
 
 ```bash
+aws eks --region <region> update-kubeconfig --name <cluster name>
 kubectl get deploy
 kubectl get svc
 kubectl get pods
