@@ -33,13 +33,3 @@ phases:
           MESSAGE="❌ Build FAILED: $CODEBUILD_BUILD_ID"
           SUBJECT="FAILURE: $CODEBUILD_PROJECT_NAME"
         fi
-
-        aws sns publish \
-          --topic-arn arn:aws:sns:eu-north-1:758327527391:CodeBuildNotifications \
-          --message "$MESSAGE" \
-          --subject "$SUBJECT" \
-          --region eu-north-1 \
-          2> sns-error.log || echo "SNS publish failed!"
-
-      - echo "SNS Error Logs:"
-      - cat sns-error.log || echo "No SNS errors"
