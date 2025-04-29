@@ -24,9 +24,7 @@ phases:
       - echo "Pushing to ECR..."
       - docker push 758327527391.dkr.ecr.eu-north-1.amazonaws.com/ecr/ci-cd:latest
 
-  finally:
-    commands:
-     # - echo "DEBUG: Build status code - $CODEBUILD_BUILD_SUCCEEDING"
+      - echo "DEBUG: Build status code - $CODEBUILD_BUILD_SUCCEEDING"
       - >
         if [ "$CODEBUILD_BUILD_SUCCEEDING" -eq 1 ]; then
           MESSAGE="SUCCESS ✅ $CODEBUILD_BUILD_ID";
