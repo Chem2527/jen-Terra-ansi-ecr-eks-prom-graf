@@ -23,14 +23,3 @@ phases:
     commands:
       - echo "Pushing to ECR..."
       - docker push 758327527391.dkr.ecr.eu-north-1.amazonaws.com/ecr/ci-cd:latest
-
-# Optional: Add these environment variables in CodeBuild instead (recommended)
-# env:
-#   variables:
-#     ECR_REGISTRY: "758327527391.dkr.ecr.eu-north-1.amazonaws.com"
-#     ECR_REPO: "ecr/ci-cd"
-
-artifacts:
-  files:
-    - '**/*'
-  base-directory: '/app'
