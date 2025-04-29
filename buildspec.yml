@@ -23,3 +23,18 @@ phases:
     commands:
       - echo "Pushing to ECR..."
       - docker push 758327527391.dkr.ecr.eu-north-1.amazonaws.com/ecr/ci-cd:latest
+
+finally:
+  commands:
+    - |
+      if [ "$CODEBUILD_BUILD_SUCCEEDING" -eq 1 ]; then
+        aws sns publish \
+          --topic-arn arn:aws:sns:eu-north-1:758327527391:CodeBuildNotifications \
+          --message "Build SUCCEEDED: $CODEBUILD_BUILD_ID" \
+          --subject "SUCCESS: $CODEBUILD_PROJECT_NAME"
+      else
+        aws sns publish \
+          --topic-arn arn:aws:sns:eu-north-1:758327527391:CodeBuildNotifications \
+          --message "Build FAILED: $CODEBUILD_BUILD_ID" \
+          --subject "FAILURE: $CODEBUILD_PROJECT_NAME"
+      fi
