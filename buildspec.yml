@@ -26,20 +26,23 @@ phases:
 
 finally:
   commands:
-    - echo ">>> Entered finally block"
-    - echo "Build status: $CODEBUILD_BUILD_SUCCEEDING"
+    - echo "DEBUG: Build status code - $CODEBUILD_BUILD_SUCCEEDING"
     - |
-      if [ "${CODEBUILD_BUILD_SUCCEEDING:-0}" -eq 1 ]; then
-        echo "Publishing SUCCESS message to SNS..."
-        aws sns publish \
-          --topic-arn arn:aws:sns:eu-north-1:758327527391:CodeBuildNotifications \
-          --message "✅ Build SUCCEEDED: $CODEBUILD_BUILD_ID" \
-          --subject "SUCCESS: $CODEBUILD_PROJECT_NAME"
+      if [ "$CODEBUILD_BUILD_SUCCEEDING" -eq 1 ]; then
+        MESSAGE="SUCCESS ✅ $CODEBUILD_BUILD_ID"
       else
-        echo "Publishing FAILURE message to SNS..."
-        aws sns publish \
-          --topic-arn arn:aws:sns:eu-north-1:758327527391:CodeBuildNotifications \
-          --message "❌ Build FAILED: $CODEBUILD_BUILD_ID" \
-          --subject "FAILURE: $CODEBUILD_PROJECT_NAME"
+        MESSAGE="FAILURE ❌ $CODEBUILD_BUILD_ID"
       fi
+      
+      # Force region and add error logging
+      aws sns publish \
+        --topic-arn arn:aws:sns:eu-north-1:758327527391:CodeBuildNotifications \
+        --message "$MESSAGE" \
+        --subject "[$CODEBUILD_BUILD_SUCCEEDING] Build Status" \
+        --region eu-north-1 \
+        2> sns-error.log || echo "SNS publish failed!"
+        
+    - echo "SNS Error Logs:"
+    - cat sns-error.log
+
 
