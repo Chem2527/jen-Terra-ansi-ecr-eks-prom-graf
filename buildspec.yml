@@ -22,14 +22,17 @@ phases:
   post_build:
     commands:
       - echo "Pushing to ECR..."
-      - docker push 758327527391.dkr.ecr.eu-north-1.amazonaws.com/ecr/ci-cd:latest || echo "Push failed"
+      - docker push 758327527391.dkr.ecr.eu-north-1.amazonaws.com/ecr/ci-cd:latest || echo "Docker push failed"
 
-      - echo "Publishing SNS Notification..."
+      - echo "Checking build success..."
       - |
         if [ "$CODEBUILD_BUILD_SUCCEEDING" = "1" ]; then
-          MESSAGE="✅ Build SUCCEEDED: $CODEBUILD_BUILD_ID"
-          SUBJECT="SUCCESS: $CODEBUILD_PROJECT_NAME"
+          echo "Sending SNS notification for success..."
+          aws sns publish \
+            --topic-arn arn:aws:sns:eu-north-1:758327527391:CodeBuildNotifications \
+            --subject "✅ Build Succeeded - $CODEBUILD_PROJECT_NAME" \
+            --message "Build ID: $CODEBUILD_BUILD_ID\nProject: $CODEBUILD_PROJECT_NAME\nStatus: SUCCESS ✅" \
+            --region eu-north-1
         else
-          MESSAGE="❌ Build FAILED: $CODEBUILD_BUILD_ID"
-          SUBJECT="FAILURE: $CODEBUILD_PROJECT_NAME"
+          echo "Build failed. No SNS notification will be sent."
         fi
