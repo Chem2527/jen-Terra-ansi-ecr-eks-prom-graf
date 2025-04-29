@@ -5,14 +5,13 @@ phases:
     runtime-versions:
       python: 3.9
     commands:
-      - echo "Installing system dependencies..."
+      - echo "Installing dependencies..."
       - apt-get update && apt-get install -y libpq-dev build-essential
-      - echo "Installing Python dependencies..."
       - pip install -r requirements.txt
 
   pre_build:
     commands:
-      - echo "Logging in to ECR..."
+      - echo "Logging in to Amazon ECR..."
       - aws ecr get-login-password --region eu-north-1 | docker login --username AWS --password-stdin 758327527391.dkr.ecr.eu-north-1.amazonaws.com
 
   build:
@@ -23,50 +22,21 @@ phases:
 
   post_build:
     commands:
-      - echo "Pushing Docker image to ECR..."
-      - docker push 758327527391.dkr.ecr.eu-north-1.amazonaws.com/ecr/ci-cd:latest || echo "Docker push failed!"
+      - echo "Pushing image to Amazon ECR..."
+      - docker push 758327527391.dkr.ecr.eu-north-1.amazonaws.com/ecr/ci-cd:latest || echo "Docker push failed"
 
-      - echo "Preparing SNS notification message..."
+      - echo "Checking build success and sending SNS notification..."
       - |
         if [ "$CODEBUILD_BUILD_SUCCEEDING" = "1" ]; then
           SUBJECT="✅ SUCCESS: $CODEBUILD_PROJECT_NAME"
-          MESSAGE=$(cat <<EOF
-Hello,
-
-✅ Your AWS CodeBuild project completed successfully.
-
-Project Name : $CODEBUILD_PROJECT_NAME
-Build ID     : $CODEBUILD_BUILD_ID
-Status       : SUCCESS ✅
-Time         : $(date -u)
-
-Regards,
-CI/CD Automation
-EOF
-)
+          MESSAGE="Build succeeded!\nProject: $CODEBUILD_PROJECT_NAME\nBuild ID: $CODEBUILD_BUILD_ID\nStatus: SUCCESS ✅"
         else
           SUBJECT="❌ FAILURE: $CODEBUILD_PROJECT_NAME"
-          MESSAGE=$(cat <<EOF
-Hello,
-
-❌ Your AWS CodeBuild project failed.
-
-Project Name : $CODEBUILD_PROJECT_NAME
-Build ID     : $CODEBUILD_BUILD_ID
-Status       : FAILURE ❌
-Time         : $(date -u)
-
-Please review the logs in AWS CodeBuild.
-
-Regards,
-CI/CD Automation
-EOF
-)
+          MESSAGE="Build failed.\nProject: $CODEBUILD_PROJECT_NAME\nBuild ID: $CODEBUILD_BUILD_ID\nStatus: FAILURE ❌"
         fi
 
-        echo "Sending SNS notification..."
         aws sns publish \
+          --region eu-north-1 \
           --topic-arn arn:aws:sns:eu-north-1:758327527391:CodeBuildNotifications \
           --message "$MESSAGE" \
-          --subject "$SUBJECT" \
-          --region eu-north-1 || echo "SNS publish failed"
+          --subject "$SUBJECT"
