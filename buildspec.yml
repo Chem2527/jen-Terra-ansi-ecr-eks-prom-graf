@@ -5,7 +5,9 @@ phases:
     runtime-versions:
       python: 3.9
     commands:
+      - echo "Installing system dependencies..."
       - apt-get update && apt-get install -y libpq-dev build-essential
+      - echo "Installing Python dependencies..."
       - pip install -r requirements.txt
 
   pre_build:
@@ -21,18 +23,50 @@ phases:
 
   post_build:
     commands:
-      - echo "Pushing to ECR..."
-      - docker push 758327527391.dkr.ecr.eu-north-1.amazonaws.com/ecr/ci-cd:latest || echo "Docker push failed"
+      - echo "Pushing Docker image to ECR..."
+      - docker push 758327527391.dkr.ecr.eu-north-1.amazonaws.com/ecr/ci-cd:latest || echo "Docker push failed!"
 
-      - echo "Checking build success..."
+      - echo "Preparing SNS notification message..."
       - |
         if [ "$CODEBUILD_BUILD_SUCCEEDING" = "1" ]; then
-          echo "Sending SNS notification for success..."
-          aws sns publish \
-            --topic-arn arn:aws:sns:eu-north-1:758327527391:CodeBuildNotifications \
-            --subject "✅ Build Succeeded - $CODEBUILD_PROJECT_NAME" \
-            --message "Build ID: $CODEBUILD_BUILD_ID\nProject: $CODEBUILD_PROJECT_NAME\nStatus: SUCCESS ✅" \
-            --region eu-north-1
+          SUBJECT="✅ SUCCESS: $CODEBUILD_PROJECT_NAME"
+          MESSAGE=$(cat <<EOF
+Hello,
+
+✅ Your AWS CodeBuild project completed successfully.
+
+Project Name : $CODEBUILD_PROJECT_NAME
+Build ID     : $CODEBUILD_BUILD_ID
+Status       : SUCCESS ✅
+Time         : $(date -u)
+
+Regards,  
+CI/CD Automation
+EOF
+)
         else
-          echo "Build failed. No SNS notification will be sent."
+          SUBJECT="❌ FAILURE: $CODEBUILD_PROJECT_NAME"
+          MESSAGE=$(cat <<EOF
+Hello,
+
+❌ Your AWS CodeBuild project failed.
+
+Project Name : $CODEBUILD_PROJECT_NAME
+Build ID     : $CODEBUILD_BUILD_ID
+Status       : FAILURE ❌
+Time         : $(date -u)
+
+Please review the logs in AWS CodeBuild.
+
+Regards,  
+saikrishna.k
+EOF
+)
         fi
+
+        echo "Sending SNS notification..."
+        aws sns publish \
+          --topic-arn arn:aws:sns:eu-north-1:758327527391:CodeBuildNotifications \
+          --message "$MESSAGE" \
+          --subject "$SUBJECT" \
+          --region eu-north-1 || echo "SNS publish failed"
