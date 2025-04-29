@@ -26,16 +26,20 @@ phases:
 
 finally:
   commands:
+    - echo ">>> Entered finally block"
     - echo "Build status: $CODEBUILD_BUILD_SUCCEEDING"
     - |
       if [ "${CODEBUILD_BUILD_SUCCEEDING:-0}" -eq 1 ]; then
+        echo "Publishing SUCCESS message to SNS..."
         aws sns publish \
           --topic-arn arn:aws:sns:eu-north-1:758327527391:CodeBuildNotifications \
           --message "✅ Build SUCCEEDED: $CODEBUILD_BUILD_ID" \
           --subject "SUCCESS: $CODEBUILD_PROJECT_NAME"
       else
+        echo "Publishing FAILURE message to SNS..."
         aws sns publish \
           --topic-arn arn:aws:sns:eu-north-1:758327527391:CodeBuildNotifications \
           --message "❌ Build FAILED: $CODEBUILD_BUILD_ID" \
           --subject "FAILURE: $CODEBUILD_PROJECT_NAME"
       fi
+
