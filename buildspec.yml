@@ -3,7 +3,7 @@ version: 0.2
 phases:
   install:
     runtime-versions:
-      python: 3.8
+      python: 3.3
     commands:
       - apt-get update && apt-get install -y libpq-dev build-essential
       - pip install -r requirements.txt
@@ -26,15 +26,16 @@ phases:
 
 finally:
   commands:
+    - echo "Build status: $CODEBUILD_BUILD_SUCCEEDING"
     - |
-      if [ "$CODEBUILD_BUILD_SUCCEEDING" -eq 1 ]; then
+      if [ "${CODEBUILD_BUILD_SUCCEEDING:-0}" -eq 1 ]; then
         aws sns publish \
           --topic-arn arn:aws:sns:eu-north-1:758327527391:CodeBuildNotifications \
-          --message "Build SUCCEEDED: $CODEBUILD_BUILD_ID" \
+          --message "✅ Build SUCCEEDED: $CODEBUILD_BUILD_ID" \
           --subject "SUCCESS: $CODEBUILD_PROJECT_NAME"
       else
         aws sns publish \
           --topic-arn arn:aws:sns:eu-north-1:758327527391:CodeBuildNotifications \
-          --message "Build FAILED: $CODEBUILD_BUILD_ID" \
+          --message "❌ Build FAILED: $CODEBUILD_BUILD_ID" \
           --subject "FAILURE: $CODEBUILD_PROJECT_NAME"
       fi
