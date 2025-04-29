@@ -26,7 +26,7 @@ phases:
 
   finally:
     commands:
-      - echo "DEBUG: Build status code - $CODEBUILD_BUILD_SUCCEEDING"
+     # - echo "DEBUG: Build status code - $CODEBUILD_BUILD_SUCCEEDING"
       - >
         if [ "$CODEBUILD_BUILD_SUCCEEDING" -eq 1 ]; then
           MESSAGE="SUCCESS ✅ $CODEBUILD_BUILD_ID";
@@ -42,3 +42,4 @@ phases:
           2> sns-error.log || echo "SNS publish failed!";
       - echo "SNS Error Logs:"
       - cat sns-error.log
+      
