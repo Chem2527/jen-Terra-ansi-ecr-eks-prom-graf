@@ -10,21 +10,25 @@ phases:
 
   pre_build:
     commands:
-      - aws ecr get-login-password | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com
+      - echo "Logging in to ECR..."
+      - aws ecr get-login-password --region eu-north-1 | docker login --username AWS --password-stdin 758327527391.dkr.ecr.eu-north-1.amazonaws.com
 
   build:
     commands:
-      - docker build -t $REPO_NAME .
-      - docker tag $REPO_NAME:latest $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$REPO_NAME:latest
+      - echo "Building Docker image..."
+      - docker build -t ecr/ci-cd .
+      - docker tag ecr/ci-cd:latest 758327527391.dkr.ecr.eu-north-1.amazonaws.com/ecr/ci-cd:latest
 
   post_build:
     commands:
-      - docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$REPO_NAME:latest
+      - echo "Pushing to ECR..."
+      - docker push 758327527391.dkr.ecr.eu-north-1.amazonaws.com/ecr/ci-cd:latest
 
-env:
-  variables:
-    REPO_NAME: "jen-terra-ansi-ecr-eks-prom-graf"
-    DOCKER_BUILDKIT: "1"  # Faster Docker builds
+# Optional: Add these environment variables in CodeBuild instead (recommended)
+# env:
+#   variables:
+#     ECR_REGISTRY: "758327527391.dkr.ecr.eu-north-1.amazonaws.com"
+#     ECR_REPO: "ecr/ci-cd"
 
 artifacts:
   files:
