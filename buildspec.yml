@@ -40,7 +40,7 @@ Build ID     : $CODEBUILD_BUILD_ID
 Status       : SUCCESS ✅
 Time         : $(date -u)
 
-Regards,  
+Regards,
 CI/CD Automation
 EOF
 )
@@ -58,8 +58,8 @@ Time         : $(date -u)
 
 Please review the logs in AWS CodeBuild.
 
-Regards,  
-saikrishna.k
+Regards,
+CI/CD Automation
 EOF
 )
         fi
