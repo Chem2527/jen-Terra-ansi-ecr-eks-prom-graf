@@ -85,4 +85,8 @@ def submissions():
     return render_template('submissions.html', data=data)
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, debug=True)  # Listen on all network interfaces
+    app.run(
+        host='0.0.0.0',
+        port=5000,
+        debug=os.getenv('FLASK_DEBUG', 'false').lower() in ('1', 'true', 'yes', 'on')
+    )  # Listen on all network interfaces
